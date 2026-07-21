@@ -1,7 +1,7 @@
 # Track‑It 🎮
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/your-username/track-it?style=social)](https://github.com/your-username/track-it)
+[![GitHub stars](https://img.shields.io/github/stars/devAlvaro26/track-it?style=social)](https://github.com/devAlvaro26/track-it)
 
 ---
 
@@ -42,7 +42,7 @@
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/track-it.git
+   git clone https://github.com/devAlvaro26/track-it.git
    cd track-it
    ```
 
@@ -96,7 +96,7 @@ This project is licensed under the **MIT License** – see the [LICENSE](LICENSE
 
 ## Contact & Support
 
-- **GitHub Issues:** https://github.com/devalvaro26/track-it/issues
+- **GitHub Issues:** https://github.com/devAlvaro26/track-it/issues
 
 Feel free to open an issue for bug reports or feature suggestions.
 
