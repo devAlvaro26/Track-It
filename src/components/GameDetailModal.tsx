@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Game, Achievement, GameStatus } from "../types";
+import { Game, Achievement, GameStatus, Language } from "../types";
 import { GameIcon, AVAILABLE_SYMBOLS } from "./GameIcon";
+import { getTranslation, translateGenre } from "../translations";
 import * as Icons from "lucide-react";
 
 interface GameDetailModalProps {
@@ -9,9 +10,12 @@ interface GameDetailModalProps {
   onClose: () => void;
   onUpdate: (game: Game) => void;
   onDelete: (id: string) => void;
+  language?: Language;
 }
 
-export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose, onUpdate, onDelete }) => {
+export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose, onUpdate, onDelete, language = "es" }) => {
+  const t = getTranslation(language);
+
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(game.title);
   const [editDescription, setEditDescription] = useState(game.description);
@@ -87,17 +91,14 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
     }
   };
 
-  // Helper to render a highly convincing vector EAN-13 barcode
+  // Helper to render vector EAN-13 barcode
   const renderBarcodeSVG = (code: string) => {
     const cleanCode = code.replace(/[^0-9]/g, "") || "0000000000000";
-    // Generate a pseudo-random pattern of black/white bars derived from the digits
     const bars: boolean[] = [];
-    // Start sentinel
     bars.push(true, false, true);
     
     for (let i = 0; i < cleanCode.length; i++) {
       const digit = parseInt(cleanCode[i] || "0");
-      // Create a deterministic pattern of 5 lines for each digit
       const pattern = [
         [true, false, true, false, false],
         [true, true, false, false, true],
@@ -113,11 +114,9 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
       
       bars.push(...pattern);
       if (i === 5) {
-        // Middle separator
         bars.push(false, true, false, true, false);
       }
     }
-    // End sentinel
     bars.push(true, false, true);
 
     return (
@@ -126,7 +125,6 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
           <g fill="#000000">
             {bars.map((isBlack, index) => {
               if (isBlack) {
-                // Varying positions, width is ~1.2px
                 return (
                   <rect
                     key={index}
@@ -148,10 +146,11 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
     );
   };
 
-  // Achievement unlock ratios
+  // Achievement ratios
   const totalAchievements = game.achievements.length;
   const unlockedCount = game.achievements.filter((a) => a.unlocked).length;
   const progressPercent = totalAchievements > 0 ? Math.round((unlockedCount / totalAchievements) * 100) : 0;
+  const locale = language === "en" ? "en-US" : "es-ES";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto" id="detail-modal-container">
@@ -168,6 +167,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
           onClick={onClose}
           className="absolute top-4 right-4 z-20 p-2 text-white/80 hover:text-white bg-black/35 hover:bg-black/50 backdrop-blur-md rounded-full transition-all cursor-pointer"
           id="close-detail-modal"
+          title={t.close}
         >
           <Icons.X className="w-5 h-5" />
         </button>
@@ -194,19 +194,19 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                     <button
                       onClick={() => setIsEditing(true)}
                       className="p-1.5 rounded-lg bg-white/10 hover:bg-white/25 border border-white/10 transition-all cursor-pointer"
-                      title="Editar juego"
+                      title={t.edit}
                       id="btn-edit-mode"
                     >
                       <Icons.Edit3 className="w-4 h-4 text-white" />
                     </button>
                     <button
                       onClick={() => {
-                        if (confirm(`¿Estás seguro de que quieres eliminar "${game.title}" de tu biblioteca?`)) {
+                        if (confirm(`${t.confirmDeleteGame}`)) {
                           onDelete(game.id);
                         }
                       }}
                       className="p-1.5 rounded-lg bg-white/10 hover:bg-rose-600/85 border border-white/10 transition-all cursor-pointer"
-                      title="Eliminar juego"
+                      title={t.delete}
                       id="btn-delete-game"
                     >
                       <Icons.Trash className="w-4 h-4 text-white" />
@@ -222,7 +222,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                     {game.title}
                   </h1>
                   <span className="text-xs font-semibold uppercase tracking-wider text-white/70 mt-1">
-                    {game.genre}
+                    {translateGenre(game.genre, language)}
                   </span>
                 </div>
 
@@ -230,19 +230,19 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                 <div className="z-10 mt-auto pt-6 border-t border-white/15 space-y-4">
                   <div>
                     <p className="text-[10px] uppercase font-bold tracking-widest text-white/50 text-center mb-1.5">
-                      Código de Barras Oficial
+                      {t.officialBarcodeTitle}
                     </p>
                     {renderBarcodeSVG(game.barcode)}
                   </div>
                   <div className="flex justify-around items-center text-xs text-white/80">
                     <div className="text-center">
-                      <p className="text-[9px] font-bold text-white/40 uppercase">Adquirido</p>
-                      <p className="font-semibold">{game.acquisitionDate || "Sin fecha"}</p>
+                      <p className="text-[9px] font-bold text-white/40 uppercase">{t.acquiredLabel}</p>
+                      <p className="font-semibold">{game.acquisitionDate || t.noDateText}</p>
                     </div>
                     <div className="w-px h-6 bg-white/15" />
                     <div className="text-center">
-                      <p className="text-[9px] font-bold text-white/40 uppercase">Lanzamiento</p>
-                      <p className="font-semibold">{game.releaseDate || "Sin fecha"}</p>
+                      <p className="text-[9px] font-bold text-white/40 uppercase">{t.releaseLabel}</p>
+                      <p className="font-semibold">{game.releaseDate || t.noDateText}</p>
                     </div>
                   </div>
                 </div>
@@ -257,24 +257,24 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                   <div className="bg-white dark:bg-[#121212] p-3 rounded-xl border border-neutral-100 dark:border-white/5">
                     <p className="text-[10px] uppercase font-bold text-neutral-400 dark:text-gray-500 mb-0.5 flex items-center gap-1">
                       <Icons.Play className="w-3 h-3 text-sky-500" />
-                      Estado
+                      {t.statusLabel}
                     </p>
                     <select
                       value={game.status}
                       onChange={(e) => handleSaveQuickEdits("status", e.target.value as GameStatus)}
                       className="bg-transparent text-sm font-bold text-neutral-800 dark:text-white focus:outline-none cursor-pointer w-full"
                     >
-                      <option value="Pendiente">Pendiente</option>
-                      <option value="Jugando">Jugando</option>
-                      <option value="Completado">Completado</option>
-                      <option value="Favoritos">Favorito</option>
+                      <option value="Pendiente">{t.statusPendingTag}</option>
+                      <option value="Jugando">{t.statusPlayingTag}</option>
+                      <option value="Completado">{t.statusCompletedTag}</option>
+                      <option value="Favoritos">{t.statusFavoriteTag}</option>
                     </select>
                   </div>
 
                   <div className="bg-white dark:bg-[#121212] p-3 rounded-xl border border-neutral-100 dark:border-white/5">
                     <p className="text-[10px] uppercase font-bold text-neutral-400 dark:text-gray-500 mb-0.5 flex items-center gap-1">
                       <Icons.Clock className="w-3 h-3 text-emerald-500" />
-                      Horas Jugadas
+                      {t.playHoursLabel}
                     </p>
                     <div className="flex items-center gap-1">
                       <input
@@ -284,14 +284,14 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                         onChange={(e) => handleSaveQuickEdits("playTime", Math.max(0, Number(e.target.value)))}
                         className="bg-transparent text-sm font-bold text-neutral-800 dark:text-white focus:outline-none w-14 border-b border-dashed border-neutral-300 dark:border-white/10"
                       />
-                      <span className="text-xs text-neutral-500 font-semibold">horas</span>
+                      <span className="text-xs text-neutral-500 font-semibold">{t.hours}</span>
                     </div>
                   </div>
 
                   <div className="bg-white dark:bg-[#121212] p-3 rounded-xl border border-neutral-100 dark:border-white/5">
                     <p className="text-[10px] uppercase font-bold text-neutral-400 dark:text-gray-500 mb-0.5 flex items-center gap-1">
                       <Icons.Award className="w-3 h-3 text-amber-500" />
-                      Calificación
+                      {t.rating}
                     </p>
                     <div className="flex gap-0.5 mt-0.5">
                       {[1, 2, 3, 4, 5].map((star) => (
@@ -312,10 +312,10 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                 {/* Description */}
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-400 dark:text-gray-500 mb-2">
-                    Resumen del Juego
+                    {t.gameSummaryTitle}
                   </h3>
                   <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed bg-white dark:bg-[#121212] p-4 rounded-xl border border-neutral-100 dark:border-white/5">
-                    {game.description || "Este juego no tiene descripción de momento."}
+                    {game.description || t.noDescriptionProvided}
                   </p>
                 </div>
 
@@ -324,11 +324,11 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-400 dark:text-gray-500 flex items-center gap-1.5">
                       <Icons.Trophy className="w-3.5 h-3.5 text-indigo-500" />
-                      Logros Obtenidos ({unlockedCount}/{totalAchievements})
+                      {t.achievementsObtainedTitle} ({unlockedCount}/{totalAchievements})
                     </h3>
                     {totalAchievements > 0 && (
                       <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                        {progressPercent}% completado
+                        {progressPercent}% {t.percentCompletedText}
                       </span>
                     )}
                   </div>
@@ -344,7 +344,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
 
                   {game.achievements.length === 0 ? (
                     <div className="text-center py-4 bg-white dark:bg-[#121212] border border-neutral-100 dark:border-white/5 rounded-xl text-xs text-neutral-400">
-                      Este juego aún no cuenta con logros. Pulsa en Editar arriba para añadir desafíos personalizados.
+                      {t.noAchievementsDetailHint}
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" id="achievements-checklist-grid">
@@ -379,7 +379,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                                   ? "bg-amber-50 dark:bg-amber-950/20 text-amber-600" 
                                   : "bg-rose-50 dark:bg-rose-950/20 text-rose-600"
                               }`}>
-                                {ach.difficulty}
+                                {ach.difficulty === "Fácil" ? t.difficultyEasy : ach.difficulty === "Medio" ? t.difficultyMedium : t.difficultyHard}
                               </span>
                             </div>
                             <p className="text-[11px] text-neutral-500 dark:text-[#CCCCCC] line-clamp-2 leading-snug">
@@ -387,7 +387,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                             </p>
                             {ach.unlocked && ach.unlockedAt && (
                               <span className="text-[9px] text-indigo-600/70 dark:text-indigo-400/70 font-semibold block mt-1">
-                                Desbloqueado el {new Date(ach.unlockedAt).toLocaleDateString("es-ES")}
+                                {t.unlockedOnDate} {new Date(ach.unlockedAt).toLocaleDateString(locale)}
                               </span>
                             )}
                           </div>
@@ -397,15 +397,15 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                   )}
                 </div>
 
-                                {/* Personal Notes */}
+                {/* Personal Notes */}
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-400 dark:text-gray-500 mb-2 flex items-center gap-1">
                     <Icons.BookOpen className="w-3.5 h-3.5" />
-                    Notas de Colección y Bitácora
+                    {t.notesAndLogTitle}
                   </h3>
                   <textarea
                     rows={3}
-                    placeholder="Escribe aquí tus recuerdos, dónde lo conseguiste, sensaciones del juego..."
+                    placeholder={t.notesTextareaPlaceholder}
                     value={editNotes}
                     onChange={(e) => {
                       setEditNotes(e.target.value);
@@ -426,7 +426,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
               <div className="flex justify-between items-center pb-4 border-b border-neutral-100 dark:border-white/5">
                 <h2 className="text-lg font-bold text-neutral-800 dark:text-white flex items-center gap-2">
                   <Icons.Edit3 className="w-5 h-5 text-indigo-500" />
-                  Editar Detalles de: {game.title}
+                  {t.editGameDetailsTitle}: {game.title}
                 </h2>
                 <button
                   type="button"
@@ -443,7 +443,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-gray-400 mb-1">
-                      Título oficial
+                      {t.gameTitleLabel}
                     </label>
                     <input
                       type="text"
@@ -457,7 +457,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-gray-400 mb-1">
-                        Género
+                        {t.genreLabel}
                       </label>
                       <input
                         type="text"
@@ -468,7 +468,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-gray-400 mb-1">
-                        Lanzamiento
+                        {t.releaseLabel}
                       </label>
                       <input
                         type="text"
@@ -481,7 +481,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
 
                   <div>
                     <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-gray-400 mb-1">
-                      Código de barras
+                      {t.barcodeLabel}
                     </label>
                     <input
                       type="text"
@@ -494,7 +494,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
 
                   <div>
                     <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-gray-400 mb-1">
-                      Resumen / Descripción
+                      {t.descriptionLabel}
                     </label>
                     <textarea
                       rows={4}
@@ -506,7 +506,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
 
                   <div>
                     <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-[#CCCCCC] mb-2">
-                      Plataformas
+                      {t.platformsLabel}
                     </label>
                     <div className="flex flex-wrap gap-1.5">
                       {availablePlatforms.map((p) => {
@@ -529,27 +529,28 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                     </div>
                   </div>
                 </div>
-                        {/* Column 2: Personal records & aesthetics */}
+
+                {/* Column 2: Personal records & aesthetics */}
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-[#CCCCCC] mb-1">
-                        Estado
+                        {t.statusLabel}
                       </label>
                       <select
                         value={editStatus}
                         onChange={(e) => setEditStatus(e.target.value as GameStatus)}
                         className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all cursor-pointer"
                       >
-                        <option value="Pendiente">Pendiente</option>
-                        <option value="Jugando">Jugando</option>
-                        <option value="Completado">Completado</option>
-                        <option value="Favoritos">Favoritos</option>
+                        <option value="Pendiente">{t.statusPendingTag}</option>
+                        <option value="Jugando">{t.statusPlayingTag}</option>
+                        <option value="Completado">{t.statusCompletedTag}</option>
+                        <option value="Favoritos">{t.statusFavoriteTag}</option>
                       </select>
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-[#CCCCCC] mb-1">
-                        Fecha adquisición
+                        {t.acquisitionDateLabel}
                       </label>
                       <input
                         type="date"
@@ -563,7 +564,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-[#CCCCCC] mb-1">
-                        Horas jugadas
+                        {t.playHoursLabel}
                       </label>
                       <input
                         type="number"
@@ -575,7 +576,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-[#CCCCCC] mb-1">
-                        Valoración
+                        {t.rating}
                       </label>
                       <div className="flex gap-1.5 h-[38px] items-center">
                         {[1, 2, 3, 4, 5].map((star) => (
@@ -597,12 +598,12 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                   {/* Aesthetic Panel */}
                   <div className="p-4 rounded-xl border border-neutral-200 dark:border-white/5 bg-neutral-50 dark:bg-[#1A1A1A]/40 space-y-3">
                     <h4 className="text-xs font-bold uppercase text-neutral-700 dark:text-[#CCCCCC]">
-                      Modificar Portada
+                      {t.modifyCoverTitle}
                     </h4>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-[10px] uppercase font-bold text-neutral-400 mb-1">
-                          Color de fondo
+                          {t.bgColorLabel}
                         </label>
                         <div className="flex items-center gap-2">
                           <input
@@ -616,7 +617,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                       </div>
                       <div>
                         <label className="block text-[10px] uppercase font-bold text-neutral-400 mb-1">
-                          Símbolo Lucide
+                          {t.centralSymbolLabel}
                         </label>
                         <select
                           value={editCoverSymbol}
@@ -635,7 +636,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
 
                   <div>
                     <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-[#CCCCCC] mb-1">
-                      Notas personales
+                      {t.collectorNotesLabel}
                     </label>
                     <textarea
                       rows={3}
@@ -656,13 +657,13 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                   onClick={() => setIsEditing(false)}
                   className="px-4 py-2 text-xs font-bold text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-white/5 rounded-lg hover:bg-neutral-100 transition-all cursor-pointer"
                 >
-                  Cancelar
+                  {t.cancel}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-md transition-all cursor-pointer"
                 >
-                  Guardar Cambios
+                  {t.saveSettings}
                 </button>
               </div>
 

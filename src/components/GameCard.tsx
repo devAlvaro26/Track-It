@@ -1,33 +1,37 @@
 import React from "react";
 import { motion } from "motion/react";
-import { Game } from "../types";
+import { Game, Language } from "../types";
 import { GameIcon } from "./GameIcon";
+import { getTranslation, translateGenre } from "../translations";
 import * as Icons from "lucide-react";
 
 interface GameCardProps {
   game: Game;
   onClick: () => void;
+  language?: Language;
 }
 
-export const GameCard: React.FC<GameCardProps> = ({ game, onClick }) => {
+export const GameCard: React.FC<GameCardProps> = ({ game, onClick, language = "es" }) => {
+  const t = getTranslation(language);
+
   const totalAchievements = game.achievements.length;
   const unlockedAchievements = game.achievements.filter((a) => a.unlocked).length;
   const achievementProgress = totalAchievements > 0 
     ? Math.round((unlockedAchievements / totalAchievements) * 100) 
     : 0;
 
-  // Status tag colors matching clear/dark mode aesthetics
+  // Status tag configuration matching clear/dark mode aesthetics
   const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
-    Pendiente: { bg: "bg-amber-100 dark:bg-amber-950/40", text: "text-amber-800 dark:text-amber-300", label: "Pendiente" },
-    Jugando: { bg: "bg-sky-100 dark:bg-sky-950/40", text: "text-sky-800 dark:text-sky-300", label: "Jugando" },
-    Completado: { bg: "bg-emerald-100 dark:bg-emerald-950/40", text: "text-emerald-800 dark:text-emerald-300", label: "Completado" },
-    Favoritos: { bg: "bg-rose-100 dark:bg-rose-950/40", text: "text-rose-800 dark:text-rose-300", label: "Favorito" },
+    Pendiente: { bg: "bg-amber-100 dark:bg-amber-950/40", text: "text-amber-800 dark:text-amber-300", label: t.statusPendingTag },
+    Jugando: { bg: "bg-sky-100 dark:bg-sky-950/40", text: "text-sky-800 dark:text-sky-300", label: t.statusPlayingTag },
+    Completado: { bg: "bg-emerald-100 dark:bg-emerald-950/40", text: "text-emerald-800 dark:text-emerald-300", label: t.statusCompletedTag },
+    Favoritos: { bg: "bg-rose-100 dark:bg-rose-950/40", text: "text-rose-800 dark:text-rose-300", label: t.statusFavoriteTag },
   };
 
   const statusStyle = statusConfig[game.status] || { bg: "bg-slate-100", text: "text-slate-800", label: game.status };
 
-  // Calculate high contrast text color for covers based on the background color if possible,
-  // or use stylish overlay gradients to ensure 100% legibility on any cover.
+  const locale = language === "en" ? "en-US" : "es-ES";
+
   return (
     <motion.div
       layoutId={`game-card-${game.id}`}
@@ -69,7 +73,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick }) => {
         {/* Cover footer text with title & genre */}
         <div className="z-10">
           <p className="text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-0.5 truncate">
-            {game.genre}
+            {translateGenre(game.genre, language)}
           </p>
           <h3 className="text-lg font-bold text-white leading-snug tracking-tight line-clamp-2 drop-shadow-sm">
             {game.title}
@@ -77,7 +81,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick }) => {
         </div>
       </div>
 
-      {/* Game info content area (Bottom 120px) */}
+      {/* Game info content area */}
       <div className="flex-1 p-4 flex flex-col justify-between bg-white dark:bg-[#0F0F0F]">
         
         {/* Status and Acquisition Date */}
@@ -87,7 +91,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick }) => {
           </span>
           <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-gray-400">
             <Icons.Calendar className="w-3.5 h-3.5" />
-            <span>{game.acquisitionDate ? new Date(game.acquisitionDate).toLocaleDateString("es-ES", { year: "numeric", month: "short" }) : "N/A"}</span>
+            <span>{game.acquisitionDate ? new Date(game.acquisitionDate).toLocaleDateString(locale, { year: "numeric", month: "short" }) : "N/A"}</span>
           </div>
         </div>
 
@@ -98,7 +102,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick }) => {
               <div className="flex justify-between items-center text-xs mb-1">
                 <span className="text-neutral-500 dark:text-gray-400 flex items-center gap-1">
                   <Icons.Trophy className="w-3.5 h-3.5 text-indigo-500" />
-                  Logros: {unlockedAchievements}/{totalAchievements}
+                  {t.achievementsLabel}: {unlockedAchievements}/{totalAchievements}
                 </span>
                 <span className="font-semibold text-neutral-700 dark:text-gray-300">
                   {achievementProgress}%
@@ -114,7 +118,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick }) => {
           ) : (
             <div className="text-xs text-neutral-400 dark:text-gray-500 italic flex items-center gap-1">
               <Icons.Trophy className="w-3.5 h-3.5 opacity-50" />
-              Sin logros registrados
+              {t.noAchievementsRecorded}
             </div>
           )}
         </div>
@@ -122,10 +126,10 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick }) => {
         {/* Footer Play Hours */}
         <div className="flex justify-between items-center pt-2 mt-2 border-t border-neutral-100 dark:border-white/5 text-[11px] text-neutral-400 dark:text-gray-500">
           <span className="flex items-center gap-1">
-            <Icons.Clock className="w-3 h-3" /> {game.playTime}h jugadas
+            <Icons.Clock className="w-3 h-3" /> {game.playTime}h {t.hoursPlayed}
           </span>
           {game.barcode && (
-            <span className="font-mono text-[9px] tracking-wider truncate max-w-[100px]" title={`Cód. barras: ${game.barcode}`}>
+            <span className="font-mono text-[9px] tracking-wider truncate max-w-[100px]" title={`${t.barcodeShort}: ${game.barcode}`}>
               ‖ {game.barcode}
             </span>
           )}

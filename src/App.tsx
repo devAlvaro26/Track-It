@@ -1,21 +1,32 @@
 import { useState, useEffect } from "react";
-import { Game, GameStatus } from "./types";
+import { Game, AppSettings, Language } from "./types";
 import { INITIAL_GAMES } from "./initialGames";
 import { GameCard } from "./components/GameCard";
 import { GameDetailModal } from "./components/GameDetailModal";
 import { AddGameForm } from "./components/AddGameForm";
 import { LibraryStatsPanel } from "./components/LibraryStatsPanel";
+import { SettingsModal } from "./components/SettingsModal";
+import { getTranslation, translateGenre } from "./translations";
 import * as Icons from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 export default function App() {
-  // Theme state: default to a domain-appropriate elegant "dark" theme, but user can toggle
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    const saved = localStorage.getItem("theme");
-    return (saved as "light" | "dark") || "dark";
+  // App Settings state (theme, language, username)
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+    const savedLang = localStorage.getItem("language") as Language | null;
+    const savedUser = localStorage.getItem("username");
+
+    return {
+      theme: savedTheme || "dark",
+      language: savedLang || "es",
+      username: savedUser || "Gamer",
+    };
   });
 
-  // Games list: initialized from local storage or our beautiful mock seed data
+  const t = getTranslation(settings.language);
+
+  // Games list: initialized from local storage or mock seed data
   const [games, setGames] = useState<Game[]>(() => {
     const saved = localStorage.getItem("game_library");
     if (saved) {
@@ -31,6 +42,7 @@ export default function App() {
   // UI state
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Search, filter and sorting state
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,24 +50,34 @@ export default function App() {
   const [platformFilter, setPlatformFilter] = useState<string>("All");
   const [sortBy, setSortBy] = useState<"title" | "playTime" | "rating" | "acquisitionDate">("acquisitionDate");
 
-  // Sync theme to document element
+  // Sync settings & theme to document element and localStorage
   useEffect(() => {
     const root = window.document.documentElement;
-    if (theme === "dark") {
+    if (settings.theme === "dark") {
       root.classList.add("dark");
     } else {
       root.classList.remove("dark");
     }
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+    localStorage.setItem("theme", settings.theme);
+    localStorage.setItem("language", settings.language);
+    localStorage.setItem("username", settings.username);
+  }, [settings]);
 
   // Sync games to localStorage
   useEffect(() => {
     localStorage.setItem("game_library", JSON.stringify(games));
   }, [games]);
 
+  // Quick theme toggle
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    setSettings((prev) => ({
+      ...prev,
+      theme: prev.theme === "dark" ? "light" : "dark",
+    }));
+  };
+
+  const handleSaveSettings = (newSettings: AppSettings) => {
+    setSettings(newSettings);
   };
 
   // Add a new game
@@ -89,6 +111,7 @@ export default function App() {
       const matchesSearch =
         game.title.toLowerCase().includes(query) ||
         game.genre.toLowerCase().includes(query) ||
+        translateGenre(game.genre, settings.language).toLowerCase().includes(query) ||
         game.barcode.includes(query);
 
       const matchesStatus = statusFilter === "All" || game.status === statusFilter;
@@ -112,7 +135,7 @@ export default function App() {
       return 0;
     });
 
-  // Extract all available platforms and genres in the library for helper badges/dropdowns
+  // Extract all available platforms in the library
   const allPlatforms = Array.from(new Set(games.flatMap((g) => g.platforms)));
 
   return (
@@ -122,32 +145,38 @@ export default function App() {
       <header className="sticky top-0 z-30 border-b border-neutral-200/60 dark:border-white/5 bg-white/85 dark:bg-[#121212]/90 backdrop-blur-md px-6 py-4" id="app-header">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           
-          {/* Logo & Slogan */}
+          {/* Logo & User Welcome */}
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-500/10 flex items-center justify-center">
               <Icons.Library className="w-6 h-6 stroke-[2]" />
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tight text-neutral-900 dark:text-white uppercase">
-                Biblioteca Gamer
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-black tracking-tight text-neutral-900 dark:text-white uppercase">
+                  {t.appTitle}
+                </h1>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                  {settings.username}
+                </span>
+              </div>
               <p className="text-xs text-neutral-500 dark:text-gray-400 font-medium">
-                Tu estantería digital de coleccionista · Con IA Gemini
+                {t.appSubtitle}
               </p>
             </div>
           </div>
 
           {/* Action Header controls */}
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
             
-            {/* Theme Toggle Button */}
+            {/* Settings Button */}
             <button
-              onClick={toggleTheme}
-              className="p-2.5 rounded-xl border border-neutral-200 dark:border-white/5 hover:bg-neutral-100 dark:hover:bg-[#1A1A1A] transition-colors cursor-pointer text-neutral-500 dark:text-gray-400"
-              title={theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-              id="theme-toggle"
+              onClick={() => setIsSettingsOpen(true)}
+              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-white/5 hover:bg-neutral-100 dark:hover:bg-[#1A1A1A] transition-colors cursor-pointer text-neutral-700 dark:text-gray-300 text-xs font-bold"
+              title={t.settings}
+              id="btn-open-settings"
             >
-              {theme === "dark" ? <Icons.Sun className="w-5 h-5" /> : <Icons.Moon className="w-5 h-5" />}
+              <Icons.Settings className="w-4 h-4 text-indigo-500" />
+              <span className="hidden sm:inline">{t.settings}</span>
             </button>
 
             {/* Add Game Button */}
@@ -157,7 +186,7 @@ export default function App() {
               id="btn-open-add"
             >
               <Icons.Plus className="w-4 h-4 stroke-[3]" />
-              Añadir Videojuego
+              {t.addGame}
             </button>
 
           </div>
@@ -169,7 +198,7 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8" id="app-main-content">
         
         {/* Statistics board */}
-        <LibraryStatsPanel games={games} />
+        <LibraryStatsPanel games={games} language={settings.language} />
 
         {/* CONTROLS BAR: SEARCH, FILTERS, AND SORTING */}
         <div className="p-5 bg-white dark:bg-[#121212] rounded-2xl border border-neutral-200/60 dark:border-white/5 flex flex-col gap-4" id="controls-section">
@@ -181,7 +210,7 @@ export default function App() {
               <Icons.Search className="absolute left-3.5 top-3 w-4 h-4 text-neutral-400" />
               <input
                 type="text"
-                placeholder="Buscar por título, género o código de barra..."
+                placeholder={t.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 text-sm bg-neutral-50 dark:bg-[#1A1A1A] border border-neutral-200 dark:border-white/5 rounded-xl text-neutral-800 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
@@ -190,7 +219,7 @@ export default function App() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-600"
+                  className="absolute right-3 top-3 text-neutral-400 hover:text-neutral-600 cursor-pointer"
                 >
                   <Icons.X className="w-4 h-4" />
                 </button>
@@ -203,32 +232,32 @@ export default function App() {
               {/* Status Filter */}
               <div className="flex items-center gap-1.5 bg-neutral-50 dark:bg-[#1A1A1A] border border-neutral-200 dark:border-white/5 px-3 py-1.5 rounded-xl">
                 <Icons.Layers className="w-4 h-4 text-neutral-400" />
-                <span className="text-xs text-neutral-400 font-semibold uppercase mr-1">Estado:</span>
+                <span className="text-xs text-neutral-400 font-semibold uppercase mr-1">{t.statusLabel}:</span>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="bg-transparent text-xs font-bold text-neutral-700 dark:text-gray-200 focus:outline-none cursor-pointer"
                   id="filter-status"
                 >
-                  <option value="All">Todos los Estados</option>
-                  <option value="Pendiente">Pendientes</option>
-                  <option value="Jugando">Jugando</option>
-                  <option value="Completado">Completados</option>
-                  <option value="Favoritos">Favoritos</option>
+                  <option value="All">{t.allStatuses}</option>
+                  <option value="Pendiente">{t.statusPending}</option>
+                  <option value="Jugando">{t.statusPlaying}</option>
+                  <option value="Completado">{t.statusCompleted}</option>
+                  <option value="Favoritos">{t.statusFavorites}</option>
                 </select>
               </div>
 
               {/* Platform Filter */}
               <div className="flex items-center gap-1.5 bg-neutral-50 dark:bg-[#1A1A1A] border border-neutral-200 dark:border-white/5 px-3 py-1.5 rounded-xl">
                 <Icons.MonitorPlay className="w-4 h-4 text-neutral-400" />
-                <span className="text-xs text-neutral-400 font-semibold uppercase mr-1">Consola:</span>
+                <span className="text-xs text-neutral-400 font-semibold uppercase mr-1">{t.consoleLabel}:</span>
                 <select
                   value={platformFilter}
                   onChange={(e) => setPlatformFilter(e.target.value)}
                   className="bg-transparent text-xs font-bold text-neutral-700 dark:text-gray-200 focus:outline-none cursor-pointer"
                   id="filter-platform"
                 >
-                  <option value="All">Todas las Consolas</option>
+                  <option value="All">{t.allConsoles}</option>
                   {allPlatforms.map((plat) => (
                     <option key={plat} value={plat}>
                       {plat}
@@ -240,17 +269,17 @@ export default function App() {
               {/* Sorting */}
               <div className="flex items-center gap-1.5 bg-neutral-50 dark:bg-[#1A1A1A] border border-neutral-200 dark:border-white/5 px-3 py-1.5 rounded-xl">
                 <Icons.ArrowUpDown className="w-4 h-4 text-neutral-400" />
-                <span className="text-xs text-neutral-400 font-semibold uppercase mr-1">Ordenar por:</span>
+                <span className="text-xs text-neutral-400 font-semibold uppercase mr-1">{t.sortByLabel}:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
                   className="bg-transparent text-xs font-bold text-neutral-700 dark:text-gray-200 focus:outline-none cursor-pointer"
                   id="sort-select"
                 >
-                  <option value="acquisitionDate">Fecha Adquisición</option>
-                  <option value="title">Título (A-Z)</option>
-                  <option value="playTime">Horas de Juego</option>
-                  <option value="rating">Calificación</option>
+                  <option value="acquisitionDate">{t.sortAcquisitionDate}</option>
+                  <option value="title">{t.sortTitle}</option>
+                  <option value="playTime">{t.sortPlayTime}</option>
+                  <option value="rating">{t.sortRating}</option>
                 </select>
               </div>
 
@@ -261,10 +290,10 @@ export default function App() {
           {/* Quick Stats Summary Footer */}
           <div className="flex flex-wrap items-center justify-between text-xs text-neutral-500 dark:text-gray-400 pt-3 border-t border-neutral-100 dark:border-white/5">
             <p>
-              Mostrando <span className="font-bold text-neutral-700 dark:text-gray-200">{filteredGames.length}</span> de <span className="font-bold">{games.length}</span> títulos en tu biblioteca
+              {t.showingCount} <span className="font-bold text-neutral-700 dark:text-gray-200">{filteredGames.length}</span> {t.ofCount} <span className="font-bold">{games.length}</span> {t.titlesInLibrary}
             </p>
             {games.length === 0 && (
-              <p className="text-indigo-500 font-semibold">Tu estantería está vacía. ¡Pulsa añadir para empezar!</p>
+              <p className="text-indigo-500 font-semibold">{t.emptyLibraryTip}</p>
             )}
           </div>
 
@@ -277,9 +306,9 @@ export default function App() {
               <Icons.Gamepad2 size={36} />
             </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-neutral-800 dark:text-white">Ningún juego coincide con los filtros</h3>
+              <h3 className="text-lg font-bold text-neutral-800 dark:text-white">{t.noGamesMatch}</h3>
               <p className="text-sm text-neutral-500 dark:text-gray-400 max-w-md mx-auto">
-                Prueba a limpiar la barra de búsqueda o a desactivar los filtros de consola o estado para volver a ver tus juegos.
+                {t.noGamesMatchDesc}
               </p>
             </div>
             <button
@@ -291,7 +320,7 @@ export default function App() {
               }}
               className="text-xs font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 px-4 py-2 rounded-xl hover:bg-indigo-500/5 transition-all cursor-pointer"
             >
-              Restablecer Filtros
+              {t.resetFilters}
             </button>
           </div>
         ) : (
@@ -305,6 +334,7 @@ export default function App() {
                 <GameCard
                   key={game.id}
                   game={game}
+                  language={settings.language}
                   onClick={() => setSelectedGameId(game.id)}
                 />
               ))}
@@ -318,19 +348,31 @@ export default function App() {
       <footer className="border-t border-neutral-200/60 dark:border-white/5 bg-white dark:bg-[#121212] py-8 px-6 mt-16 text-center text-xs text-neutral-500 dark:text-gray-400" id="app-footer">
         <div className="max-w-7xl mx-auto space-y-2">
           <p className="font-medium">
-            © {new Date().getFullYear()} Biblioteca Gamer Digital. Hecho con ❤️ para amantes de los videojuegos.
+            © {new Date().getFullYear()} {t.appTitle}. {t.madeWithLove}
           </p>
           <p className="text-[10px] text-neutral-400 dark:text-gray-500">
-            Los datos son autocompletados mediante el SDK oficial de Gemini 3.6-flash. Admite escaneo de códigos de barra manuales y sincronización local en el dispositivo.
+            {t.footerTechNote}
           </p>
         </div>
       </footer>
+
+      {/* SETTINGS MODAL OVERLAY */}
+      <AnimatePresence>
+        {isSettingsOpen && (
+          <SettingsModal
+            settings={settings}
+            onSaveSettings={handleSaveSettings}
+            onClose={() => setIsSettingsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* DETAIL MODAL OVERLAY */}
       <AnimatePresence>
         {selectedGame && (
           <GameDetailModal
             game={selectedGame}
+            language={settings.language}
             onClose={() => setSelectedGameId(null)}
             onUpdate={handleUpdateGame}
             onDelete={handleDeleteGame}
@@ -342,6 +384,7 @@ export default function App() {
       <AnimatePresence>
         {isAddOpen && (
           <AddGameForm
+            language={settings.language}
             onClose={() => setIsAddOpen(false)}
             onAdd={handleAddGame}
           />

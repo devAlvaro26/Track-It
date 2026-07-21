@@ -1,14 +1,18 @@
 import React, { useState } from "react";
-import { Game, Achievement, GameStatus } from "../types";
+import { Game, Achievement, GameStatus, Language } from "../types";
 import { AVAILABLE_SYMBOLS } from "./GameIcon";
+import { getTranslation } from "../translations";
 import * as Icons from "lucide-react";
 
 interface AddGameFormProps {
   onClose: () => void;
   onAdd: (game: Omit<Game, "id">) => void;
+  language?: Language;
 }
 
-export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
+export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, language = "es" }) => {
+  const t = getTranslation(language);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [genre, setGenre] = useState("");
@@ -42,7 +46,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
   // Hit the server-side endpoint `/api/enrich-game` using fetch
   const handleAiAutofill = async () => {
     if (!title.trim()) {
-      setAiError("Por favor, introduce el título del videojuego antes de autocompletar.");
+      setAiError(t.aiErrorTitlePrompt);
       return;
     }
 
@@ -53,11 +57,11 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
       const response = await fetch("/api/enrich-game", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title, language }),
       });
 
       if (!response.ok) {
-        throw new Error("No se pudo obtener la información de la IA. Comprueba la conexión o intenta más tarde.");
+        throw new Error(t.aiConnectionError);
       }
 
       const data = await response.json();
@@ -67,7 +71,6 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
       if (data.description) setDescription(data.description);
       if (data.genre) setGenre(data.genre);
       if (data.platforms && Array.isArray(data.platforms)) {
-        // Map platforms to our available ones if possible, or include them
         setPlatforms(data.platforms);
       }
       if (data.releaseDate) setReleaseDate(data.releaseDate);
@@ -77,16 +80,16 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
       if (data.achievements && Array.isArray(data.achievements)) {
         const enrichedAchievements: Achievement[] = data.achievements.map((ach: any, idx: number) => ({
           id: `ach-gen-${Date.now()}-${idx}`,
-          name: ach.name || "Logro descodificado",
-          description: ach.description || "Completa retos para desbloquear.",
+          name: ach.name || t.newAchievementName,
+          description: ach.description || t.newAchievementDesc,
           difficulty: ach.difficulty === "Fácil" || ach.difficulty === "Medio" || ach.difficulty === "Difícil" ? ach.difficulty : "Medio",
           unlocked: false,
         }));
         setAchievements(enrichedAchievements);
       }
     } catch (error: any) {
-      console.error("Error al autocompletar:", error);
-      setAiError(error.message || "Error al conectar con la IA de Gemini.");
+      console.error("Error AI autofill:", error);
+      setAiError(error.message || t.aiConnectionError);
     } finally {
       setIsAiLoading(false);
     }
@@ -98,7 +101,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
 
     onAdd({
       title: title.trim(),
-      description: description.trim() || "Sin descripción disponible.",
+      description: description.trim() || t.noDescriptionProvided,
       genre: genre.trim() || "Otros",
       platforms: platforms.length > 0 ? platforms : ["PC"],
       releaseDate: releaseDate || new Date().toISOString().split("T")[0],
@@ -117,8 +120,8 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
   const handleAddManualAchievement = () => {
     const newAch: Achievement = {
       id: `ach-manual-${Date.now()}`,
-      name: `Nuevo Logro #${achievements.length + 1}`,
-      description: "Haz algo épico para desbloquear este logro.",
+      name: `${t.newAchievementName} #${achievements.length + 1}`,
+      description: t.newAchievementDesc,
       difficulty: "Medio",
       unlocked: false,
     };
@@ -143,7 +146,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-white/5">
           <h2 className="text-xl font-bold text-neutral-800 dark:text-white flex items-center gap-2">
             <Icons.PlusSquare className="w-5 h-5 text-indigo-500" />
-            Añadir Videojuego a la Biblioteca
+            {t.addGameTitle}
           </h2>
           <button
             onClick={onClose}
@@ -163,10 +166,10 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
               <div className="space-y-0.5">
                 <h3 className="text-sm font-semibold text-indigo-800 dark:text-indigo-400 flex items-center gap-1.5">
                   <Icons.Sparkles className="w-4 h-4 text-indigo-500 fill-indigo-500" />
-                  Asistente Inteligente de Autocompletado
+                  {t.aiAssistantTitle}
                 </h3>
                 <p className="text-xs text-neutral-500 dark:text-gray-400">
-                  Introduce el nombre y deja que la IA de Gemini complete la carátula, descripción, logros y código de barras de inmediato.
+                  {t.aiAssistantDesc}
                 </p>
               </div>
               <button
@@ -179,12 +182,12 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
                 {isAiLoading ? (
                   <>
                     <Icons.Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Buscando en Gemini...
+                    {t.aiSearching}
                   </>
                 ) : (
                   <>
                     <Icons.Sparkles className="w-3.5 h-3.5 fill-white" />
-                    Autocompletar con IA
+                    {t.aiAutofillBtn}
                   </>
                 )}
               </button>
@@ -203,12 +206,12 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
-                  Título del Videojuego *
+                  {t.gameTitleLabel}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Ej: Metroid Prime, Hollow Knight"
+                  placeholder={t.gameTitlePlaceholder}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
@@ -219,11 +222,11 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
-                    Género
+                    {t.genreLabel}
                   </label>
                   <input
                     type="text"
-                    placeholder="Ej: Metroidvania, RPG"
+                    placeholder={t.genrePlaceholder}
                     value={genre}
                     onChange={(e) => setGenre(e.target.value)}
                     className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
@@ -233,11 +236,11 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
-                    Lanzamiento
+                    {t.releaseLabel}
                   </label>
                   <input
                     type="text"
-                    placeholder="Ej: 2023 o 2023-05-12"
+                    placeholder={t.releasePlaceholder}
                     value={releaseDate}
                     onChange={(e) => setReleaseDate(e.target.value)}
                     className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
@@ -248,13 +251,13 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
-                  Código de Barras (EAN / UPC)
+                  {t.barcodeLabel}
                 </label>
                 <div className="relative">
                   <Icons.Barcode className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
                   <input
                     type="text"
-                    placeholder="Ej: 0045496598518 (12-13 números)"
+                    placeholder={t.barcodePlaceholder}
                     value={barcode}
                     onChange={(e) => setBarcode(e.target.value.replace(/[^0-9]/g, ""))}
                     maxLength={13}
@@ -266,11 +269,11 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
-                  Descripción
+                  {t.descriptionLabel}
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="Breve resumen del juego, de qué trata o por qué es especial..."
+                  placeholder={t.descriptionPlaceholder}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all resize-none"
@@ -280,7 +283,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-2">
-                  Plataformas (Selecciona una o varias)
+                  {t.platformsLabel}
                 </label>
                 <div className="flex flex-wrap gap-1.5" id="platform-selectors">
                   {availablePlatforms.map((p) => {
@@ -309,7 +312,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
-                    Estado de Colección
+                    {t.collectionStatusLabel}
                   </label>
                   <select
                     value={status}
@@ -317,16 +320,16 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
                     className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all cursor-pointer"
                     id="select-status"
                   >
-                    <option value="Pendiente">Pendiente de Jugar</option>
-                    <option value="Jugando">Jugando Actualmente</option>
-                    <option value="Completado">Completado</option>
-                    <option value="Favoritos">Favoritos del Alma</option>
+                    <option value="Pendiente">{t.pendingToPlayOption}</option>
+                    <option value="Jugando">{t.currentlyPlayingOption}</option>
+                    <option value="Completado">{t.completedOption}</option>
+                    <option value="Favoritos">{t.favoritesOption}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
-                    Fecha de Adquisición
+                    {t.acquisitionDateLabel}
                   </label>
                   <input
                     type="date"
@@ -341,7 +344,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
-                    Calificación Personal
+                    {t.personalRatingLabel}
                   </label>
                   <div className="flex items-center gap-1.5 h-[38px]">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -361,12 +364,12 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
-                    Horas de Juego
+                    {t.playHoursLabel}
                   </label>
                   <input
                     type="number"
                     min="0"
-                    placeholder="Horas"
+                    placeholder={t.hours}
                     value={playTime || ""}
                     onChange={(e) => setPlayTime(Math.max(0, Number(e.target.value)))}
                     className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
@@ -379,13 +382,13 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
               <div className="p-4 rounded-xl border border-neutral-200 dark:border-white/5 bg-neutral-50 dark:bg-[#1A1A1A]/40 space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-gray-300 flex items-center gap-1">
                   <Icons.Palette className="w-3.5 h-3.5" />
-                  Diseño de Portada Minimalista
+                  {t.coverDesignTitle}
                 </h4>
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] uppercase font-semibold text-neutral-400 mb-1">
-                      Color de Fondo
+                      {t.bgColorLabel}
                     </label>
                     <div className="flex items-center gap-2">
                       <input
@@ -400,7 +403,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
 
                   <div>
                     <label className="block text-[10px] uppercase font-semibold text-neutral-400 mb-1">
-                      Símbolo Central
+                      {t.centralSymbolLabel}
                     </label>
                     <select
                       value={coverSymbol}
@@ -419,11 +422,11 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
-                  Notas de Coleccionista
+                  {t.collectorNotesLabel}
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="¿Dónde lo compraste? ¿Es de segunda mano o físico? Anota lo que quieras..."
+                  placeholder={t.collectorNotesPlaceholder}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all resize-none"
@@ -441,10 +444,10 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
               <div>
                 <h3 className="text-sm font-bold text-neutral-800 dark:text-white flex items-center gap-1.5">
                   <Icons.Trophy className="w-4 h-4 text-indigo-500" />
-                  Logros del Juego ({achievements.length})
+                  {t.gameAchievementsTitle} ({achievements.length})
                 </h3>
                 <p className="text-xs text-neutral-500 dark:text-gray-400">
-                  Desafíos específicos para registrar tu progreso al 100% en este título.
+                  {t.gameAchievementsDesc}
                 </p>
               </div>
               <button
@@ -454,13 +457,13 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
                 id="btn-add-achievement"
               >
                 <Icons.Plus className="w-3.5 h-3.5" />
-                Añadir Logro
+                {t.addAchievementBtn}
               </button>
             </div>
 
             {achievements.length === 0 ? (
               <div className="text-center py-6 px-4 border-2 border-dashed border-neutral-100 dark:border-white/5 rounded-xl text-xs text-neutral-400 dark:text-gray-500">
-                Aún no has añadido logros. ¡Escribe un título y pulsa &quot;Autocompletar con IA&quot; para cargar logros icónicos automáticamente!
+                {t.noAchievementsEmptyHint}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" id="achievements-form-grid">
@@ -473,7 +476,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
                       type="button"
                       onClick={() => handleRemoveAchievement(ach.id)}
                       className="absolute top-2 right-2 p-1 text-neutral-400 hover:text-rose-500 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
-                      title="Eliminar logro"
+                      title={t.delete}
                     >
                       <Icons.Trash className="w-3.5 h-3.5" />
                     </button>
@@ -484,7 +487,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
                           type="text"
                           required
                           value={ach.name}
-                          placeholder="Nombre del logro"
+                          placeholder={t.achievementNamePlaceholder}
                           onChange={(e) => handleUpdateAchievement(ach.id, { name: e.target.value })}
                           className="w-full bg-transparent border-b border-neutral-200 dark:border-gray-700 focus:border-indigo-500 text-xs font-bold text-neutral-800 dark:text-neutral-200 focus:outline-none pb-0.5"
                         />
@@ -493,11 +496,11 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
                         <select
                           value={ach.difficulty}
                           onChange={(e) => handleUpdateAchievement(ach.id, { difficulty: e.target.value as "Fácil" | "Medio" | "Difícil" })}
-                          className="w-full bg-transparent text-[10px] font-semibold uppercase text-neutral-500 focus:outline-none"
+                          className="w-full bg-transparent text-[10px] font-semibold uppercase text-neutral-500 focus:outline-none cursor-pointer"
                         >
-                          <option value="Fácil">Fácil</option>
-                          <option value="Medio">Medio</option>
-                          <option value="Difícil">Difícil</option>
+                          <option value="Fácil">{t.difficultyEasy}</option>
+                          <option value="Medio">{t.difficultyMedium}</option>
+                          <option value="Difícil">{t.difficultyHard}</option>
                         </select>
                       </div>
                     </div>
@@ -506,7 +509,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
                       type="text"
                       required
                       value={ach.description}
-                      placeholder="¿Cómo se consigue?"
+                      placeholder={t.achievementUnlockHow}
                       onChange={(e) => handleUpdateAchievement(ach.id, { description: e.target.value })}
                       className="w-full bg-transparent text-xs text-neutral-500 dark:text-gray-400 focus:outline-none"
                     />
@@ -523,7 +526,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
                         className="w-3.5 h-3.5 rounded border-neutral-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                       />
                       <label htmlFor={`check-${ach.id}`} className="text-[11px] text-neutral-500 dark:text-neutral-400 select-none cursor-pointer">
-                        ¿Conseguido ya?
+                        {t.alreadyUnlockedQuestion}
                       </label>
                     </div>
                   </div>
@@ -540,7 +543,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
               className="px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-[#CCCCCC] border border-neutral-200 dark:border-white/5 rounded-lg hover:bg-neutral-50 dark:hover:bg-[#1A1A1A] transition-colors cursor-pointer"
               id="btn-cancel-add"
             >
-              Cancelar
+              {t.cancel}
             </button>
             <button
               type="submit"
@@ -548,7 +551,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd }) => {
               className="px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-neutral-200 dark:disabled:bg-neutral-800 disabled:text-neutral-400 dark:disabled:text-neutral-500 rounded-lg shadow-sm transition-all cursor-pointer"
               id="btn-submit-add"
             >
-              Guardar en Biblioteca
+              {t.saveToLibraryBtn}
             </button>
           </div>
 

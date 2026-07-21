@@ -1,0 +1,209 @@
+import React, { useState } from "react";
+import { AppSettings, Language } from "../types";
+import { getTranslation } from "../translations";
+import * as Icons from "lucide-react";
+import { motion } from "motion/react";
+
+interface SettingsModalProps {
+  settings: AppSettings;
+  onSaveSettings: (newSettings: AppSettings) => void;
+  onClose: () => void;
+}
+
+export const SettingsModal: React.FC<SettingsModalProps> = ({
+  settings,
+  onSaveSettings,
+  onClose,
+}) => {
+  const [theme, setTheme] = useState<"light" | "dark">(settings.theme);
+  const [language, setLanguage] = useState<Language>(settings.language);
+  const [username, setUsername] = useState<string>(settings.username);
+  const [savedSuccess, setSavedSuccess] = useState(false);
+
+  const t = getTranslation(language);
+
+  const handleThemeChange = (newTheme: "light" | "dark") => {
+    setTheme(newTheme);
+    const root = window.document.documentElement;
+    if (newTheme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSaveSettings({
+      theme,
+      language,
+      username: username.trim() || "Coleccionista",
+    });
+    setSavedSuccess(true);
+    setTimeout(() => {
+      onClose();
+    }, 400);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
+      onClick={onClose}
+      id="settings-modal-backdrop"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ duration: 0.2 }}
+        className="relative w-full max-w-lg bg-white dark:bg-[#121212] border border-neutral-200/80 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+        id="settings-modal-card"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-neutral-100 dark:border-white/5 bg-neutral-50/50 dark:bg-[#1A1A1A]/30">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl">
+              <Icons.Settings className="w-5 h-5 stroke-[2.5]" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-neutral-900 dark:text-white">
+                {t.settingsTitle}
+              </h2>
+              <p className="text-xs text-neutral-500 dark:text-gray-400">
+                {t.settingsSubtitle}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-white rounded-lg hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+            id="btn-close-settings"
+            title={t.close}
+          >
+            <Icons.X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Username setting */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-gray-400 flex items-center gap-2">
+              <Icons.User className="w-4 h-4 text-indigo-500" />
+              {t.usernameLabel}
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder={t.usernamePlaceholder}
+              maxLength={30}
+              required
+              className="w-full px-4 py-2.5 text-sm bg-neutral-50 dark:bg-[#1A1A1A] border border-neutral-200 dark:border-white/5 rounded-xl text-neutral-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+              id="input-username"
+            />
+          </div>
+
+          {/* Theme setting */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-gray-400 flex items-center gap-2">
+              <Icons.SunMoon className="w-4 h-4 text-amber-500" />
+              {t.themeLabel}
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleThemeChange("dark")}
+                className={`flex items-center justify-center gap-2.5 p-3.5 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
+                  theme === "dark"
+                    ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20"
+                    : "bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-700 dark:text-gray-300 border-neutral-200 dark:border-white/5 hover:border-neutral-300 dark:hover:border-white/10"
+                }`}
+              >
+                <Icons.Moon className="w-4 h-4" />
+                {t.themeDark}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleThemeChange("light")}
+                className={`flex items-center justify-center gap-2.5 p-3.5 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
+                  theme === "light"
+                    ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20"
+                    : "bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-700 dark:text-gray-300 border-neutral-200 dark:border-white/5 hover:border-neutral-300 dark:hover:border-white/10"
+                }`}
+              >
+                <Icons.Sun className="w-4 h-4" />
+                {t.themeLight}
+              </button>
+            </div>
+          </div>
+
+          {/* Language setting */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-gray-400 flex items-center gap-2">
+              <Icons.Globe className="w-4 h-4 text-emerald-500" />
+              {t.languageLabel}
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setLanguage("es")}
+                className={`flex items-center justify-center gap-2 p-3.5 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
+                  language === "es"
+                    ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20"
+                    : "bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-700 dark:text-gray-300 border-neutral-200 dark:border-white/5 hover:border-neutral-300 dark:hover:border-white/10"
+                }`}
+              >
+                <span className="text-sm">🇪🇸</span>
+                {t.languageEs}
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage("en")}
+                className={`flex items-center justify-center gap-2 p-3.5 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
+                  language === "en"
+                    ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20"
+                    : "bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-700 dark:text-gray-300 border-neutral-200 dark:border-white/5 hover:border-neutral-300 dark:hover:border-white/10"
+                }`}
+              >
+                <span className="text-sm">🇬🇧</span>
+                {t.languageEn}
+              </button>
+            </div>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="pt-4 border-t border-neutral-100 dark:border-white/5 flex items-center justify-between">
+            {savedSuccess ? (
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                <Icons.CheckCircle2 className="w-4 h-4" />
+                {t.settingsSavedMsg}
+              </span>
+            ) : (
+              <span className="text-xs text-neutral-400 dark:text-gray-500">
+                {t.saveToApply}
+              </span>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2.5 text-xs font-bold text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-white/5 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+              >
+                {t.cancel}
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-md shadow-indigo-600/20 transition-all hover:scale-[1.02] cursor-pointer"
+              >
+                {t.saveSettings}
+              </button>
+            </div>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+};

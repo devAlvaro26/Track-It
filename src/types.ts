@@ -28,6 +28,14 @@ export interface Game {
   notes?: string; // custom personal notes
 }
 
+export type Language = "es" | "en";
+
+export interface AppSettings {
+  theme: "light" | "dark";
+  language: Language;
+  username: string;
+}
+
 export interface LibraryStats {
   totalGames: number;
   completedGames: number;

@@ -1,12 +1,16 @@
 import React from "react";
-import { Game } from "../types";
+import { Game, Language } from "../types";
+import { getTranslation } from "../translations";
 import * as Icons from "lucide-react";
 
 interface LibraryStatsPanelProps {
   games: Game[];
+  language?: Language;
 }
 
-export const LibraryStatsPanel: React.FC<LibraryStatsPanelProps> = ({ games }) => {
+export const LibraryStatsPanel: React.FC<LibraryStatsPanelProps> = ({ games, language = "es" }) => {
+  const t = getTranslation((language as Language) || "es");
+
   // Compute stats on the fly
   const totalGames = games.length;
   
@@ -39,13 +43,13 @@ export const LibraryStatsPanel: React.FC<LibraryStatsPanelProps> = ({ games }) =
         </div>
         <div>
           <p className="text-[10px] uppercase font-bold text-neutral-400 dark:text-gray-500 tracking-wider">
-            Total Biblioteca
+            {t.totalLibrary}
           </p>
           <p className="text-2xl font-black text-neutral-800 dark:text-white leading-none mt-1">
             {totalGames}
           </p>
           <p className="text-[10px] text-neutral-500 dark:text-gray-400 mt-1">
-            {playingGames} en curso · {pendingGames} pendientes
+            {playingGames} {t.inProgress} · {pendingGames} {t.pending}
           </p>
         </div>
       </div>
@@ -57,13 +61,13 @@ export const LibraryStatsPanel: React.FC<LibraryStatsPanelProps> = ({ games }) =
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[10px] uppercase font-bold text-neutral-400 dark:text-gray-500 tracking-wider">
-            Tasa de Superación
+            {t.completionRate}
           </p>
           <p className="text-2xl font-black text-neutral-800 dark:text-white leading-none mt-1">
             {completionRate}%
           </p>
           <p className="text-[10px] text-neutral-500 dark:text-gray-400 mt-1 truncate">
-            {completedGames} completados · {favoritesGames} favoritos
+            {completedGames} {t.completed} · {favoritesGames} {t.favorites}
           </p>
         </div>
       </div>
@@ -75,13 +79,13 @@ export const LibraryStatsPanel: React.FC<LibraryStatsPanelProps> = ({ games }) =
         </div>
         <div>
           <p className="text-[10px] uppercase font-bold text-neutral-400 dark:text-gray-500 tracking-wider">
-            Tiempo de Juego
+            {t.playTime}
           </p>
           <p className="text-2xl font-black text-neutral-800 dark:text-white leading-none mt-1">
             {totalHours}h
           </p>
           <p className="text-[10px] text-neutral-500 dark:text-gray-400 mt-1">
-            Promedio: {totalGames > 0 ? Math.round(totalHours / totalGames) : 0}h por videojuego
+            {t.avgHours}: {totalGames > 0 ? Math.round(totalHours / totalGames) : 0}{t.hoursPerGame}
           </p>
         </div>
       </div>
@@ -93,7 +97,7 @@ export const LibraryStatsPanel: React.FC<LibraryStatsPanelProps> = ({ games }) =
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[10px] uppercase font-bold text-neutral-400 dark:text-gray-500 tracking-wider">
-            Logros Desbloqueados
+            {t.achievementsUnlocked}
           </p>
           <p className="text-2xl font-black text-neutral-800 dark:text-white leading-none mt-1">
             {unlockedAchievementsCount} <span className="text-sm font-normal text-neutral-400 dark:text-gray-500">/ {totalAchievementsCount}</span>
