@@ -51,7 +51,7 @@ async function startServer() {
               platforms: {
                 type: Type.ARRAY,
                 items: { type: Type.STRING },
-                description: "Key platforms where the game is available (e.g. Nintendo Switch, PlayStation 5, PC, Xbox Series X)."
+                description: "Key platforms/consoles where the game is available. Use standard console names like 'PlayStation 5', 'PlayStation 4', 'PlayStation 3', 'PlayStation 2', 'PlayStation 1', 'Nintendo Switch', 'Super Nintendo (SNES)', 'Nintendo NES', 'Nintendo 64', 'Nintendo GameCube', 'Game Boy Advance', 'Nintendo 3DS', 'Xbox Series X|S', 'Xbox 360', 'Sega Mega Drive / Genesis', 'Sega Dreamcast', 'Atari 2600', 'Arcade / Recreativa', 'PC', 'Steam Deck', etc."
               },
               coverColor: { type: Type.STRING, description: "An elegant hex color (e.g. #1e293b, #059669, #7c3aed, #db2777) representing the game's aesthetic." },
               coverSymbol: { type: Type.STRING, description: "A simple Lucide icon name (e.g. 'sword', 'shield', 'gamepad', 'crown', 'ghost', 'trophy', 'compass', 'flame', 'music', 'skull', 'heart', 'star', 'rocket', 'target', 'wrench', 'car') matching the theme." },

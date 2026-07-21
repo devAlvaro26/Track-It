@@ -136,7 +136,7 @@ export default function App() {
     });
 
   // Extract all available platforms in the library
-  const allPlatforms = Array.from(new Set(games.flatMap((g) => g.platforms)));
+  const allPlatforms = Array.from(new Set(games.flatMap((g) => g.platforms))).sort();
 
   return (
     <div className="min-h-screen transition-colors duration-300 bg-neutral-50 dark:bg-[#0A0A0A] text-neutral-800 dark:text-gray-100 font-sans" id="app-root">

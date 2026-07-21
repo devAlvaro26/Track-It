@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Game, Achievement, GameStatus, Language } from "../types";
 import { GameIcon, AVAILABLE_SYMBOLS } from "./GameIcon";
+import { ConsolePicker } from "./ConsolePicker";
 import { getTranslation, translateGenre } from "../translations";
 import * as Icons from "lucide-react";
 
@@ -508,25 +509,11 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                     <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-[#CCCCCC] mb-2">
                       {t.platformsLabel}
                     </label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {availablePlatforms.map((p) => {
-                        const isSelected = editPlatforms.includes(p);
-                        return (
-                          <button
-                            key={p}
-                            type="button"
-                            onClick={() => toggleEditPlatform(p)}
-                            className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all cursor-pointer ${
-                              isSelected
-                                ? "bg-indigo-600 text-white border-indigo-600"
-                                : "bg-neutral-100 dark:bg-[#1A1A1A] text-neutral-600 dark:text-gray-300 border-neutral-200 dark:border-white/5 hover:border-neutral-300"
-                            }`}
-                          >
-                            {p}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <ConsolePicker
+                      selectedPlatforms={editPlatforms}
+                      onChange={setEditPlatforms}
+                      language={language}
+                    />
                   </div>
                 </div>
 

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Game, Achievement, GameStatus, Language } from "../types";
 import { AVAILABLE_SYMBOLS } from "./GameIcon";
+import { ConsolePicker } from "./ConsolePicker";
 import { getTranslation } from "../translations";
 import * as Icons from "lucide-react";
 
@@ -285,25 +286,11 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-2">
                   {t.platformsLabel}
                 </label>
-                <div className="flex flex-wrap gap-1.5" id="platform-selectors">
-                  {availablePlatforms.map((p) => {
-                    const isSelected = platforms.includes(p);
-                    return (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => togglePlatform(p)}
-                        className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all cursor-pointer ${
-                          isSelected
-                            ? "bg-indigo-600 text-white border-indigo-600"
-                            : "bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-600 dark:text-gray-300 border-neutral-200 dark:border-white/5 hover:border-neutral-300"
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    );
-                  })}
-                </div>
+                <ConsolePicker
+                  selectedPlatforms={platforms}
+                  onChange={setPlatforms}
+                  language={language}
+                />
               </div>
             </div>
 

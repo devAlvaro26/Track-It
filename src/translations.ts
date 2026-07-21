@@ -314,8 +314,36 @@ export const translationTable = {
     en: "Short summary of the game, plot, or why it's special...",
   },
   platformsLabel: {
-    es: "Plataformas (Selecciona una o varias)",
-    en: "Platforms (Select one or multiple)",
+    es: "Plataformas y Consolas (Selecciona una o varias)",
+    en: "Platforms & Consoles (Select one or multiple)",
+  },
+  selectedConsolesLabel: {
+    es: "Consolas seleccionadas",
+    en: "Selected consoles",
+  },
+  noConsolesSelected: {
+    es: "Ninguna consola seleccionada",
+    en: "No consoles selected",
+  },
+  searchConsolePlaceholder: {
+    es: "Buscar consola (ej: Switch, PS2, Mega Drive, Atari)...",
+    en: "Search console (e.g. Switch, PS2, Mega Drive, Atari)...",
+  },
+  addOtherConsole: {
+    es: "Otra consola",
+    en: "Other console",
+  },
+  customConsolePlaceholder: {
+    es: "Escribe el nombre de la consola...",
+    en: "Type custom console name...",
+  },
+  add: {
+    es: "Añadir",
+    en: "Add",
+  },
+  noConsolesFound: {
+    es: "No se encontraron consolas con esa búsqueda.",
+    en: "No consoles found matching search.",
   },
   collectionStatusLabel: {
     es: "Estado de Colección",
