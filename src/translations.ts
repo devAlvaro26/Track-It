@@ -244,7 +244,7 @@ export const translationTable = {
     en: "Barcode",
   },
 
-  // --- ADD GAME FORM ---
+  // --- ADD GAME FORM & CONSOLE PICKER ---
   addGameTitle: {
     es: "Añadir Videojuego a la Biblioteca",
     en: "Add Video Game to Library",
@@ -508,6 +508,102 @@ export const translationTable = {
     en: "Modify Cover",
   },
 
+  // --- CONSOLE CATEGORIES ---
+  consoleCategoryAll: {
+    es: "Todas",
+    en: "All",
+  },
+  consoleCategorySony: {
+    es: "PlayStation",
+    en: "PlayStation",
+  },
+  consoleCategoryNintendo: {
+    es: "Nintendo",
+    en: "Nintendo",
+  },
+  consoleCategoryXbox: {
+    es: "Xbox",
+    en: "Xbox",
+  },
+  consoleCategorySega: {
+    es: "Sega",
+    en: "Sega",
+  },
+  consoleCategoryPCPortable: {
+    es: "PC y Portátiles",
+    en: "PC & Portables",
+  },
+  consoleCategoryAtariRetro: {
+    es: "Atari y Clásicas",
+    en: "Atari & Classics",
+  },
+  consoleCategoryArcadeOtros: {
+    es: "Arcade y Otros",
+    en: "Arcade & Others",
+  },
+
+  // --- SYMBOL LABELS ---
+  symbolGamepad: {
+    es: "Mando de juego",
+    en: "Game Controller",
+  },
+  symbolSword: {
+    es: "Espada (Acción)",
+    en: "Sword (Action)",
+  },
+  symbolShield: {
+    es: "Escudo (Aventura)",
+    en: "Shield (Adventure)",
+  },
+  symbolCrown: {
+    es: "Corona (Fantasía/Monarquía)",
+    en: "Crown (Fantasy/Monarchy)",
+  },
+  symbolSkull: {
+    es: "Calavera (Terror/Dificultad)",
+    en: "Skull (Horror/Difficulty)",
+  },
+  symbolStar: {
+    es: "Estrella (Plataformas/Especial)",
+    en: "Star (Platforms/Special)",
+  },
+  symbolCar: {
+    es: "Coche (Carreras)",
+    en: "Car (Racing)",
+  },
+  symbolBolt: {
+    es: "Rayo (Velocidad/Acción)",
+    en: "Bolt (Speed/Action)",
+  },
+  symbolGhost: {
+    es: "Fantasma (Terror/Retro)",
+    en: "Ghost (Horror/Retro)",
+  },
+  symbolCompass: {
+    es: "Brújula (Exploración)",
+    en: "Compass (Exploration)",
+  },
+  symbolFlame: {
+    es: "Fuego (Combate/Intenso)",
+    en: "Flame (Combat/Intense)",
+  },
+  symbolTrophy: {
+    es: "Trofeo (Logros/Competición)",
+    en: "Trophy (Achievements/Competition)",
+  },
+  symbolSparkles: {
+    es: "Destellos (Magia/Indie)",
+    en: "Sparkles (Magic/Indie)",
+  },
+  symbolTarget: {
+    es: "Diana (Shooter)",
+    en: "Target (Shooter)",
+  },
+  symbolRocket: {
+    es: "Cohete (Espacial/Ciencia Ficción)",
+    en: "Rocket (Sci-Fi/Space)",
+  },
+
   // --- COMMON BUTTONS & LABELS ---
   close: {
     es: "Cerrar",
@@ -596,7 +692,7 @@ export function tKey(key: TranslationKey, lang: Language = "es"): string {
  * Genre dictionary to dynamically translate genre terms between Spanish and English
  */
 const genreDictionary: Record<string, { es: string; en: string }> = {
-  plataformas: { es: "Plataformas", en: "Platformer" },
+  plataformas: { es: "Plataformas", en: "Platforms" },
   aventura: { es: "Aventura", en: "Adventure" },
   aventuras: { es: "Aventuras", en: "Adventure" },
   rpg: { es: "RPG", en: "RPG" },
@@ -659,6 +755,82 @@ export function translateGenre(genreStr: string = "", lang: Language | string = 
 }
 
 /**
+ * Translates console category IDs to localized display names.
+ */
+export function translateConsoleCategory(categoryId: string, lang: Language | string = "es"): string {
+  const t = getTranslation(lang);
+  switch (categoryId) {
+    case "all":
+      return t.consoleCategoryAll;
+    case "Sony":
+      return t.consoleCategorySony;
+    case "Nintendo":
+      return t.consoleCategoryNintendo;
+    case "Xbox":
+      return t.consoleCategoryXbox;
+    case "Sega":
+      return t.consoleCategorySega;
+    case "PC & Portable":
+      return t.consoleCategoryPCPortable;
+    case "Atari & Retro":
+      return t.consoleCategoryAtariRetro;
+    case "Arcade & Otros":
+      return t.consoleCategoryArcadeOtros;
+    default:
+      return categoryId;
+  }
+}
+
+/**
+ * Symbol key map helper for cover icon labels
+ */
+const symbolTranslationMap: Record<string, TranslationKey> = {
+  gamepad: "symbolGamepad",
+  sword: "symbolSword",
+  shield: "symbolShield",
+  crown: "symbolCrown",
+  skull: "symbolSkull",
+  star: "symbolStar",
+  car: "symbolCar",
+  bolt: "symbolBolt",
+  ghost: "symbolGhost",
+  compass: "symbolCompass",
+  flame: "symbolFlame",
+  trophy: "symbolTrophy",
+  sparkles: "symbolSparkles",
+  target: "symbolTarget",
+  rocket: "symbolRocket",
+};
+
+/**
+ * Translates symbol icon labels for cover selection.
+ */
+export function translateSymbolLabel(symbolId: string, lang: Language | string = "es"): string {
+  const t = getTranslation(lang);
+  const key = symbolTranslationMap[symbolId];
+  if (key && t[key]) {
+    return t[key];
+  }
+  return symbolId;
+}
+
+/**
+ * Standardized custom hook for React components.
+ * Provides dictionary and translation helper functions in a single hook call.
+ */
+export function useTranslation(lang: Language | string = "es") {
+  const selectedLang: Language = lang === "en" ? "en" : "es";
+  const t = getTranslation(selectedLang);
+  return {
+    t,
+    lang: selectedLang,
+    translateGenre: (genre: string) => translateGenre(genre, selectedLang),
+    translateConsoleCategory: (catId: string) => translateConsoleCategory(catId, selectedLang),
+    translateSymbolLabel: (symbolId: string) => translateSymbolLabel(symbolId, selectedLang),
+  };
+}
+
+/**
  * Backward compatibility object mapping for legacy code imports `translations.es` / `translations.en`.
  */
 export const translations = {
@@ -669,3 +841,4 @@ export const translations = {
     return getTranslation("en");
   },
 };
+

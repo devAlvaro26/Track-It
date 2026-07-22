@@ -47,7 +47,7 @@ async function startServer() {
               description: { type: Type.STRING, description: `A brief, elegant, and professional description in ${targetLangName} (max 3 sentences).` },
               releaseDate: { type: Type.STRING, description: "Official approximate release date in YYYY-MM-DD or YYYY format." },
               barcode: { type: Type.STRING, description: "Representative realistic 12 or 13 digit numeric barcode." },
-              genre: { type: Type.STRING, description: `Main genre in ${targetLangName} (e.g. Action RPG, Platformer, Adventure, Horror, Racing).` },
+              genre: { type: Type.STRING, description: `Main genre in ${targetLangName} (e.g. Action RPG, Platforms, Adventure, Horror, Racing).` },
               platforms: {
                 type: Type.ARRAY,
                 items: { type: Type.STRING },

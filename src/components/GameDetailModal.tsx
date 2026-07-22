@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Game, Achievement, GameStatus, Language } from "../types";
 import { GameIcon, AVAILABLE_SYMBOLS } from "./GameIcon";
 import { ConsolePicker } from "./ConsolePicker";
-import { getTranslation, translateGenre } from "../translations";
+import { getTranslation, translateGenre, translateSymbolLabel } from "../translations";
 import * as Icons from "lucide-react";
 
 interface GameDetailModalProps {
@@ -613,7 +613,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                         >
                           {AVAILABLE_SYMBOLS.map((sym) => (
                             <option key={sym.id} value={sym.icon}>
-                              {sym.label[language] || sym.label["es"]}
+                              {translateSymbolLabel(sym.id, language)}
                             </option>
                           ))}
                         </select>

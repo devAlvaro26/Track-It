@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { CONSOLES_LIST, CONSOLE_CATEGORIES } from "../consoles";
-import { getTranslation } from "../translations";
+import { useTranslation } from "../translations";
 import { Language } from "../types";
 import * as Icons from "lucide-react";
 
@@ -15,7 +15,7 @@ export const ConsolePicker: React.FC<ConsolePickerProps> = ({
   onChange,
   language = "es",
 }) => {
-  const t = getTranslation(language);
+  const { t, translateConsoleCategory } = useTranslation(language);
 
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -61,12 +61,12 @@ export const ConsolePicker: React.FC<ConsolePickerProps> = ({
       <div className="flex flex-wrap gap-1.5 items-center min-h-[32px] p-2 bg-neutral-100 dark:bg-[#161616] rounded-xl border border-neutral-200 dark:border-white/5">
         <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-gray-500 mr-1 flex items-center gap-1">
           <Icons.CheckSquare className="w-3 h-3 text-indigo-500" />
-          {t.selectedConsolesLabel || "Consolas seleccionadas"} ({selectedPlatforms.length}):
+          {t.selectedConsolesLabel} ({selectedPlatforms.length}):
         </span>
 
         {selectedPlatforms.length === 0 ? (
           <span className="text-xs text-neutral-400 dark:text-gray-500 italic">
-            {t.noConsolesSelected || "Ninguna consola seleccionada"}
+            {t.noConsolesSelected}
           </span>
         ) : (
           selectedPlatforms.map((platform) => (
@@ -79,7 +79,7 @@ export const ConsolePicker: React.FC<ConsolePickerProps> = ({
                 type="button"
                 onClick={() => togglePlatform(platform)}
                 className="p-0.5 hover:bg-indigo-700 rounded transition-colors cursor-pointer"
-                title={t.delete || "Eliminar"}
+                title={t.delete}
               >
                 <Icons.X className="w-3 h-3" />
               </button>
@@ -96,7 +96,7 @@ export const ConsolePicker: React.FC<ConsolePickerProps> = ({
             <Icons.Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-neutral-400" />
             <input
               type="text"
-              placeholder={t.searchConsolePlaceholder || "Buscar consola (ej: Switch, PS2, Mega Drive, Atari)..."}
+              placeholder={t.searchConsolePlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-8 pr-3 py-1.5 text-xs bg-neutral-50 dark:bg-[#1A1A1A] border border-neutral-200 dark:border-white/5 rounded-lg text-neutral-800 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -118,7 +118,7 @@ export const ConsolePicker: React.FC<ConsolePickerProps> = ({
             className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-neutral-700 dark:text-gray-300 bg-neutral-100 dark:bg-[#1A1A1A] border border-neutral-200 dark:border-white/5 hover:border-neutral-300 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
           >
             <Icons.Plus className="w-3.5 h-3.5 text-indigo-500" />
-            {t.addOtherConsole || "Otra consola"}
+            {t.addOtherConsole}
           </button>
         </div>
 
@@ -127,7 +127,7 @@ export const ConsolePicker: React.FC<ConsolePickerProps> = ({
           <div className="flex gap-2 items-center p-2 bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900/50 rounded-xl">
             <input
               type="text"
-              placeholder={t.customConsolePlaceholder || "Nombre de consola personalizada..."}
+              placeholder={t.customConsolePlaceholder}
               value={customConsole}
               onChange={(e) => setCustomConsole(e.target.value)}
               onKeyDown={(e) => {
@@ -145,7 +145,7 @@ export const ConsolePicker: React.FC<ConsolePickerProps> = ({
               disabled={!customConsole.trim()}
               className="px-3 py-1 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-lg transition-colors cursor-pointer"
             >
-              {t.add || "Añadir"}
+              {t.add}
             </button>
           </div>
         )}
@@ -159,13 +159,12 @@ export const ConsolePicker: React.FC<ConsolePickerProps> = ({
                 key={cat.id}
                 type="button"
                 onClick={() => setActiveCategory(cat.id)}
-                className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border whitespace-nowrap transition-all cursor-pointer ${
-                  isActive
+                className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border whitespace-nowrap transition-all cursor-pointer ${isActive
                     ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
                     : "bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-600 dark:text-gray-400 border-neutral-200 dark:border-white/5 hover:bg-neutral-100 dark:hover:bg-[#222222]"
-                }`}
+                  }`}
               >
-                {cat.name}
+                {translateConsoleCategory(cat.id)}
               </button>
             );
           })}
@@ -176,7 +175,7 @@ export const ConsolePicker: React.FC<ConsolePickerProps> = ({
       <div className="max-h-[160px] overflow-y-auto p-2 bg-neutral-50 dark:bg-[#121212] rounded-xl border border-neutral-200 dark:border-white/5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5" id="consoles-grid">
         {filteredConsoles.length === 0 ? (
           <div className="col-span-full text-center py-4 text-xs text-neutral-400">
-            {t.noConsolesFound || "No se encontraron consolas que coincidan."}
+            {t.noConsolesFound}
           </div>
         ) : (
           filteredConsoles.map((c) => {
@@ -186,11 +185,10 @@ export const ConsolePicker: React.FC<ConsolePickerProps> = ({
                 key={c.id}
                 type="button"
                 onClick={() => togglePlatform(c.name)}
-                className={`text-left text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all flex items-center justify-between cursor-pointer ${
-                  isSelected
+                className={`text-left text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all flex items-center justify-between cursor-pointer ${isSelected
                     ? "bg-indigo-600 text-white border-indigo-600 font-bold shadow-sm"
                     : "bg-white dark:bg-[#1A1A1A] text-neutral-700 dark:text-gray-300 border-neutral-200 dark:border-white/5 hover:border-indigo-400/50 hover:bg-neutral-100 dark:hover:bg-[#222222]"
-                }`}
+                  }`}
               >
                 <span className="truncate">{c.name}</span>
                 {isSelected && <Icons.Check className="w-3 h-3 ml-1 shrink-0 text-white" />}
