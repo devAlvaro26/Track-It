@@ -12,8 +12,8 @@ export const translationTable = {
     en: "My Library",
   },
   appSubtitle: {
-    es: "Tu estantería digital de videojuegos · Con IA",
-    en: "Your digital game shelf · Powered by AI",
+    es: "Tu estantería digital de videojuegos · IGDB",
+    en: "Your digital game shelf · IGDB",
   },
   welcomeUser: {
     es: "Colección de",
@@ -244,18 +244,78 @@ export const translationTable = {
     en: "Barcode",
   },
 
-  // --- ADD GAME FORM & CONSOLE PICKER ---
+  // --- ADD GAME FORM & CONSOLE PICKER & IGDB ---
   addGameTitle: {
     es: "Añadir Videojuego a la Biblioteca",
     en: "Add Video Game to Library",
   },
+  igdbSearchTitle: {
+    es: "Buscar en IGDB (Base de Datos Oficial)",
+    en: "Search IGDB (Official Database)",
+  },
+  igdbSearchBtn: {
+    es: "Buscar en IGDB",
+    en: "Search IGDB",
+  },
+  igdbSearching: {
+    es: "Buscando en IGDB...",
+    en: "Searching IGDB...",
+  },
+  igdbSelectGame: {
+    es: "Seleccionar Juego",
+    en: "Select Game",
+  },
+  igdbRating: {
+    es: "Puntuación IGDB",
+    en: "IGDB Rating",
+  },
+  igdbOfficialCover: {
+    es: "Portada Oficial IGDB",
+    en: "Official IGDB Cover",
+  },
+  igdbConnected: {
+    es: "API IGDB v4 Activa",
+    en: "IGDB API v4 Active",
+  },
+  igdbNotConfigured: {
+    es: "Conexión a IGDB",
+    en: "IGDB Connection",
+  },
+  igdbConfigureHint: {
+    es: "Añade TWITCH_CLIENT_ID y TWITCH_CLIENT_SECRET en .env para consultas directas a la API v4 de IGDB.",
+    en: "Add TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET in .env for direct IGDB v4 API queries.",
+  },
+  igdbCoverUrlLabel: {
+    es: "URL de la Portada / Carátula (IGDB)",
+    en: "Cover Image URL (IGDB)",
+  },
+  igdbCoverUrlPlaceholder: {
+    es: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/...",
+    en: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/...",
+  },
+  fetchIgdbCover: {
+    es: "Obtener portada de IGDB",
+    en: "Fetch IGDB cover",
+  },
+  viewOnIgdb: {
+    es: "Ver ficha en IGDB.com",
+    en: "View page on IGDB.com",
+  },
+  igdbModalTitle: {
+    es: "Buscar Videojuego en IGDB",
+    en: "Search Video Game on IGDB",
+  },
+  igdbModalSubtitle: {
+    es: "Obtén información oficial, fechas de lanzamiento, plataformas y la portada oficial en alta resolución.",
+    en: "Get official game data, release dates, platforms, and high-res cover art.",
+  },
   aiAssistantTitle: {
-    es: "Asistente Inteligente de Autocompletado",
-    en: "Smart Auto-Fill Assistant",
+    es: "Búsqueda en Base de Datos IGDB",
+    en: "Search IGDB Database",
   },
   aiAssistantDesc: {
-    es: "Introduce el nombre y deja que la IA de Gemini complete la carátula, descripción, logros y código de barras de inmediato.",
-    en: "Type the name and let Gemini AI fill the cover, description, achievements, and barcode instantly.",
+    es: "Busca en la base de datos oficial de IGDB para importar la portada, sinopsis, fechas y plataformas automáticamente.",
+    en: "Search the official IGDB database to automatically import cover art, synopsis, dates, and platforms.",
   },
   aiSearching: {
     es: "Buscando en Gemini...",
@@ -410,8 +470,8 @@ export const translationTable = {
     en: "Add Achievement",
   },
   noAchievementsEmptyHint: {
-    es: "Aún no has añadido logros. ¡Escribe un título y pulsa \"Autocompletar con IA\" para cargar logros icónicos automáticamente!",
-    en: "No achievements added yet. Type a title and click \"Auto-fill with AI\" to load iconic achievements automatically!",
+    es: "Aún no has añadido logros. ¡Haz clic en \"Añadir Logro\" para incluir desafíos personalizados!",
+    en: "No achievements added yet. Click \"Add Achievement\" to include custom challenges!",
   },
   newAchievementName: {
     es: "Nuevo Logro",
@@ -565,7 +625,7 @@ export const translationTable = {
   },
   symbolStar: {
     es: "Estrella (Plataformas/Especial)",
-    en: "Star (Platforms/Special)",
+    en: "Star (Platformer/Special)",
   },
   symbolCar: {
     es: "Coche (Carreras)",
@@ -646,8 +706,8 @@ export const translationTable = {
     en: "Made with ❤️ for video game enthusiasts.",
   },
   footerTechNote: {
-    es: "Los datos son autocompletados mediante el SDK oficial de Gemini. Admite escaneo de códigos de barra manuales y sincronización local.",
-    en: "Data is auto-filled using the official Gemini SDK. Supports barcode scanning and local synchronization.",
+    es: "Integrado con la API v4 oficial de IGDB. Admite códigos de barra y almacenamiento local.",
+    en: "Integrated with official IGDB v4 API. Supports barcodes and local persistence.",
   },
 } as const;
 
@@ -692,7 +752,7 @@ export function tKey(key: TranslationKey, lang: Language = "es"): string {
  * Genre dictionary to dynamically translate genre terms between Spanish and English
  */
 const genreDictionary: Record<string, { es: string; en: string }> = {
-  plataformas: { es: "Plataformas", en: "Platforms" },
+  plataformas: { es: "Plataformas", en: "Platformer" },
   aventura: { es: "Aventura", en: "Adventure" },
   aventuras: { es: "Aventuras", en: "Adventure" },
   rpg: { es: "RPG", en: "RPG" },

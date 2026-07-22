@@ -44,38 +44,61 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, language = "e
       {/* 3:4 Aspect Ratio Cover Box */}
       <div className="relative h-[280px] w-full overflow-hidden flex flex-col justify-between p-4" style={{ backgroundColor: game.coverColor }}>
         
-        {/* Abstract pattern overlays for premium collector's edition aesthetic */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 opacity-90 pointer-events-none" />
-        <div className="absolute inset-0 bg-radial-gradient from-transparent to-black/30 opacity-70 pointer-events-none" />
+        {/* Official Cover Image (if present) */}
+        {game.coverImage && (
+          <img
+            src={game.coverImage}
+            alt={game.title}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              (e.target as HTMLElement).style.display = "none";
+            }}
+          />
+        )}
+
+        {/* Abstract pattern overlays for readability over image or background */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/40 pointer-events-none" />
         
-        {/* Platform logo & Star Rating (Top Bar) */}
+        {/* Platform logo & Star Rating / IGDB Badge (Top Bar) */}
         <div className="z-10 flex justify-between items-center">
-          <span className="text-[10px] font-bold tracking-widest text-white/90 uppercase px-2 py-0.5 rounded-md bg-white/15 backdrop-blur-md">
+          <span className="text-[10px] font-bold tracking-widest text-white/90 uppercase px-2 py-0.5 rounded-md bg-black/40 backdrop-blur-md border border-white/10">
             {game.platforms[0] || "GAME"}
           </span>
-          <div className="flex items-center gap-0.5">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Icons.Star
-                key={i}
-                className={`w-3.5 h-3.5 ${i < game.rating ? "text-amber-400 fill-amber-400" : "text-white/20"}`}
-              />
-            ))}
+          <div className="flex items-center gap-1.5">
+            {game.igdbRating !== undefined && (
+              <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-indigo-600/90 text-white backdrop-blur-md border border-indigo-400/30 flex items-center gap-1 shadow-sm" title={`Score IGDB: ${game.igdbRating}/100`}>
+                <Icons.Database className="w-2.5 h-2.5" />
+                {game.igdbRating}
+              </span>
+            )}
+            <div className="flex items-center gap-0.5 bg-black/30 backdrop-blur-md px-1.5 py-0.5 rounded-md border border-white/10">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Icons.Star
+                  key={i}
+                  className={`w-3 h-3 ${i < game.rating ? "text-amber-400 fill-amber-400" : "text-white/20"}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Central Symbol Cover Art (debossed emblem effect) */}
-        <div className="z-10 flex flex-col items-center justify-center py-6">
-          <div className="p-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-inner group-hover:scale-110 transition-transform duration-300">
-            <GameIcon name={game.coverSymbol} className="text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.2)]" size={42} />
+        {/* Central Symbol Cover Art (Shown as emblem or overlay) */}
+        {!game.coverImage && (
+          <div className="z-10 flex flex-col items-center justify-center py-6">
+            <div className="p-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-inner group-hover:scale-110 transition-transform duration-300">
+              <GameIcon name={game.coverSymbol} className="text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.2)]" size={42} />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Cover footer text with title & genre */}
-        <div className="z-10">
-          <p className="text-[11px] font-semibold text-white/70 uppercase tracking-wider mb-0.5 truncate">
+        <div className="z-10 mt-auto">
+          <p className="text-[11px] font-semibold text-white/80 uppercase tracking-wider mb-0.5 truncate drop-shadow">
             {translateGenre(game.genre, language)}
           </p>
-          <h3 className="text-lg font-bold text-white leading-snug tracking-tight line-clamp-2 drop-shadow-sm">
+          <h3 className="text-lg font-bold text-white leading-snug tracking-tight line-clamp-2 drop-shadow-md">
             {game.title}
           </h3>
         </div>

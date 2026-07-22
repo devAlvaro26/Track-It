@@ -1,6 +1,6 @@
 {
   "name": "Biblioteca de Videojuegos",
-  "description": "Una elegante biblioteca digital para gestionar tu colección de videojuegos, logros, códigos de barras y fechas de adquisición con asistente de autocompletado inteligente.",
+  "description": "Una elegante biblioteca digital para gestionar tu colección de videojuegos, logros, códigos de barras y fechas de adquisición con integración con la base de datos IGDB.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

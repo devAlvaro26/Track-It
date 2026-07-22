@@ -159,10 +159,11 @@ export const ConsolePicker: React.FC<ConsolePickerProps> = ({
                 key={cat.id}
                 type="button"
                 onClick={() => setActiveCategory(cat.id)}
-                className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border whitespace-nowrap transition-all cursor-pointer ${isActive
+                className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border whitespace-nowrap transition-all cursor-pointer ${
+                  isActive
                     ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
                     : "bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-600 dark:text-gray-400 border-neutral-200 dark:border-white/5 hover:bg-neutral-100 dark:hover:bg-[#222222]"
-                  }`}
+                }`}
               >
                 {translateConsoleCategory(cat.id)}
               </button>
@@ -185,10 +186,11 @@ export const ConsolePicker: React.FC<ConsolePickerProps> = ({
                 key={c.id}
                 type="button"
                 onClick={() => togglePlatform(c.name)}
-                className={`text-left text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all flex items-center justify-between cursor-pointer ${isSelected
+                className={`text-left text-xs px-2.5 py-1.5 rounded-lg border font-medium transition-all flex items-center justify-between cursor-pointer ${
+                  isSelected
                     ? "bg-indigo-600 text-white border-indigo-600 font-bold shadow-sm"
                     : "bg-white dark:bg-[#1A1A1A] text-neutral-700 dark:text-gray-300 border-neutral-200 dark:border-white/5 hover:border-indigo-400/50 hover:bg-neutral-100 dark:hover:bg-[#222222]"
-                  }`}
+                }`}
               >
                 <span className="truncate">{c.name}</span>
                 {isSelected && <Icons.Check className="w-3 h-3 ml-1 shrink-0 text-white" />}
@@ -200,3 +202,4 @@ export const ConsolePicker: React.FC<ConsolePickerProps> = ({
     </div>
   );
 };
+

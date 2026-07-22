@@ -1,10 +1,83 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 
 dotenv.config();
+
+let cachedTwitchToken: { token: string; expiresAt: number } | null = null;
+
+/**
+ * Retrieves Twitch OAuth App Access Token required for IGDB API v4 calls.
+ */
+async function getTwitchToken(): Promise<string | null> {
+  const clientId = (process.env.TWITCH_CLIENT_ID || process.env.IGDB_CLIENT_ID || "").trim();
+  const clientSecret = (process.env.TWITCH_CLIENT_SECRET || process.env.IGDB_CLIENT_SECRET || "").trim();
+
+  // Guard against missing, empty or placeholder credentials
+  if (!clientId || !clientSecret || clientId.toLowerCase().includes("your_") || clientSecret.toLowerCase().includes("your_")) {
+    return null;
+  }
+
+  if (cachedTwitchToken && cachedTwitchToken.expiresAt > Date.now() + 60000) {
+    return cachedTwitchToken.token;
+  }
+
+  try {
+    const res = await fetch("https://id.twitch.tv/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: "client_credentials",
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.warn("Twitch OAuth token request status", res.status, ":", errText);
+      return null;
+    }
+
+    const data = await res.json();
+    cachedTwitchToken = {
+      token: data.access_token,
+      expiresAt: Date.now() + (data.expires_in * 1000),
+    };
+
+    return cachedTwitchToken.token;
+  } catch (err) {
+    console.warn("Error fetching Twitch access token:", err);
+    return null;
+  }
+}
+
+/**
+ * Formats IGDB image_id or raw URL into a high-resolution cover image URL (t_cover_big_2x)
+ */
+function formatIgdbCoverUrl(raw: any): string | undefined {
+  if (!raw) return undefined;
+
+  if (typeof raw === "string") {
+    if (raw.startsWith("http") || raw.startsWith("//")) {
+      const url = raw.startsWith("//") ? `https:${raw}` : raw;
+      return url.replace("/t_thumb/", "/t_cover_big_2x/");
+    }
+    return `https://images.igdb.com/igdb/image/upload/t_cover_big_2x/${raw}.jpg`;
+  }
+
+  if (raw.image_id) {
+    return `https://images.igdb.com/igdb/image/upload/t_cover_big_2x/${raw.image_id}.jpg`;
+  }
+
+  if (raw.url) {
+    const url = raw.url.startsWith("//") ? `https:${raw.url}` : raw.url;
+    return url.replace("/t_thumb/", "/t_cover_big_2x/");
+  }
+
+  return undefined;
+}
 
 async function startServer() {
   const app = express();
@@ -12,78 +85,76 @@ async function startServer() {
 
   app.use(express.json());
 
-  const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      }
-    }
+  // Check IGDB configuration status
+  app.get("/api/igdb/status", async (req, res) => {
+    const clientId = process.env.TWITCH_CLIENT_ID || process.env.IGDB_CLIENT_ID;
+    const clientSecret = process.env.TWITCH_CLIENT_SECRET || process.env.IGDB_CLIENT_SECRET;
+    const isConfigured = Boolean(clientId && clientSecret);
+
+    res.json({
+      configured: isConfigured,
+      clientIdPresent: Boolean(clientId),
+      clientSecretPresent: Boolean(clientSecret),
+    });
   });
 
-  // API to enrich video game information using Gemini 3.6-flash
-  app.post("/api/enrich-game", async (req, res) => {
+  // Search games in IGDB API v4
+  app.post("/api/igdb/search", async (req, res) => {
     try {
-      const { title, language = "es" } = req.body;
-      if (!title || typeof title !== "string" || title.trim() === "") {
-        return res.status(400).json({ error: "El título es obligatorio y debe ser un texto válido." });
+      const { query, limit = 10 } = req.body;
+      if (!query || typeof query !== "string" || !query.trim()) {
+        return res.status(400).json({ error: "El término de búsqueda es requerido." });
       }
 
-      const targetLangName = language === "en" ? "English" : "Spanish";
+      const clientId = process.env.TWITCH_CLIENT_ID || process.env.IGDB_CLIENT_ID;
+      const token = await getTwitchToken();
 
-      const prompt = `Proporciona información detallada en ${targetLangName} para el videojuego "${title}".
-      Queremos datos precisos y elegantes para una biblioteca digital personal de coleccionista.
-      Completa la información incluyendo su descripción en ${targetLangName}, año/fecha de lanzamiento, un código de barras representativo (EAN o UPC realista de este juego), género principal en ${targetLangName}, plataformas habituales, logros divertidos u oficiales en ${targetLangName}, y sugerencias visuales de diseño para crear una carátula digital minimalista (un color de fondo elegante y un símbolo o ícono representativo).`;
+      if (clientId && token) {
+        // Direct IGDB v4 Search
+        const sanitizedQuery = query.trim().replace(/"/g, '\\"');
+        const igdbBody = `search "${sanitizedQuery}"; fields name, summary, storyline, first_release_date, genres.name, platforms.name, cover.url, cover.image_id, total_rating, rating, url; limit ${limit};`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              title: { type: Type.STRING, description: "Official corrected title of the game." },
-              description: { type: Type.STRING, description: `A brief, elegant, and professional description in ${targetLangName} (max 3 sentences).` },
-              releaseDate: { type: Type.STRING, description: "Official approximate release date in YYYY-MM-DD or YYYY format." },
-              barcode: { type: Type.STRING, description: "Representative realistic 12 or 13 digit numeric barcode." },
-              genre: { type: Type.STRING, description: `Main genre in ${targetLangName} (e.g. Action RPG, Platforms, Adventure, Horror, Racing).` },
-              platforms: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: "Key platforms/consoles where the game is available. Use standard console names like 'PlayStation 5', 'PlayStation 4', 'PlayStation 3', 'PlayStation 2', 'PlayStation 1', 'Nintendo Switch', 'Super Nintendo (SNES)', 'Nintendo NES', 'Nintendo 64', 'Nintendo GameCube', 'Game Boy Advance', 'Nintendo 3DS', 'Xbox Series X|S', 'Xbox 360', 'Sega Mega Drive / Genesis', 'Sega Dreamcast', 'Atari 2600', 'Arcade / Recreativa', 'PC', 'Steam Deck', etc."
-              },
-              coverColor: { type: Type.STRING, description: "An elegant hex color (e.g. #1e293b, #059669, #7c3aed, #db2777) representing the game's aesthetic." },
-              coverSymbol: { type: Type.STRING, description: "A simple Lucide icon name (e.g. 'sword', 'shield', 'gamepad', 'crown', 'ghost', 'trophy', 'compass', 'flame', 'music', 'skull', 'heart', 'star', 'rocket', 'target', 'wrench', 'car') matching the theme." },
-              achievements: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING, description: `Name of the achievement in ${targetLangName}.` },
-                    description: { type: Type.STRING, description: `Clear objective description in ${targetLangName}.` },
-                    difficulty: { type: Type.STRING, description: "Difficulty: 'Fácil', 'Medio', or 'Difícil'." }
-                  },
-                  required: ["name", "description", "difficulty"]
-                },
-                description: `List of 4 iconic achievements in ${targetLangName} for this game.`
-              }
-            },
-            required: ["title", "description", "releaseDate", "barcode", "genre", "platforms", "coverColor", "coverSymbol", "achievements"]
-          }
+        const igdbRes = await fetch("https://api.igdb.com/v4/games", {
+          method: "POST",
+          headers: {
+            "Client-ID": clientId,
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "text/plain",
+          },
+          body: igdbBody,
+        });
+
+        if (igdbRes.ok) {
+          const rawGames = await igdbRes.json();
+          const games = rawGames.map((g: any) => ({
+            id: g.id,
+            name: g.name,
+            summary: g.summary || g.storyline || "",
+            firstReleaseDate: g.first_release_date 
+              ? new Date(g.first_release_date * 1000).toISOString().split("T")[0]
+              : "",
+            genres: g.genres ? g.genres.map((gen: any) => gen.name) : [],
+            platforms: g.platforms ? g.platforms.map((p: any) => p.name) : [],
+            coverUrl: formatIgdbCoverUrl(g.cover),
+            rating: g.total_rating || g.rating ? Math.round(g.total_rating || g.rating) : undefined,
+            url: g.url || `https://www.igdb.com/games/${g.id}`,
+          }));
+
+          return res.json({ games, source: "igdb", configured: true });
         }
+        console.warn("IGDB search call returned status:", igdbRes.status);
+      }
+
+      return res.json({
+        games: [],
+        source: "igdb",
+        configured: false,
+        message: "Configura TWITCH_CLIENT_ID y TWITCH_CLIENT_SECRET en el archivo .env para realizar búsquedas en IGDB."
       });
 
-      const responseText = response.text;
-      if (!responseText) {
-        return res.status(500).json({ error: "No se pudo obtener respuesta del modelo de IA." });
-      }
-
-      const gameData = JSON.parse(responseText.trim());
-      res.json(gameData);
     } catch (error: any) {
-      console.error("Error al enriquecer juego:", error);
-      res.status(500).json({ error: error.message || "Error interno del servidor al procesar la IA." });
+      console.error("Error en /api/igdb/search:", error);
+      res.status(500).json({ error: error.message || "Error al buscar juegos en IGDB." });
     }
   });
 
@@ -108,3 +179,4 @@ async function startServer() {
 }
 
 startServer();
+

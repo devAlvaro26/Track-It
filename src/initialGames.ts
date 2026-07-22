@@ -15,6 +15,10 @@ export const INITIAL_GAMES: Game[] = [
     status: "Completado",
     coverColor: "#0d5c4e",
     coverSymbol: "shield",
+    coverImage: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co5v23.jpg",
+    igdbId: 119277,
+    igdbRating: 95,
+    igdbUrl: "https://www.igdb.com/games/the-legend-of-zelda-tears-of-the-kingdom",
     achievements: [
       { id: "totk-1", name: "El Poder de la Creación", description: "Utiliza la habilidad Ultramano para construir tu primer vehículo funcional.", difficulty: "Fácil", unlocked: true, unlockedAt: "2023-05-15" },
       { id: "totk-2", name: "Salvador del Reino", description: "Derrota al Rey Demonio Ganondorf y rescata a la princesa Zelda.", difficulty: "Difícil", unlocked: true, unlockedAt: "2023-06-20" },
@@ -37,6 +41,10 @@ export const INITIAL_GAMES: Game[] = [
     status: "Favoritos",
     coverColor: "#451a03",
     coverSymbol: "skull",
+    coverImage: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co4ni3.jpg",
+    igdbId: 119133,
+    igdbRating: 96,
+    igdbUrl: "https://www.igdb.com/games/elden-ring",
     achievements: [
       { id: "er-1", name: "Señor de Elden", description: "Consigue el final principal del juego y conviértete en Señor de Elden.", difficulty: "Difícil", unlocked: true, unlockedAt: "2022-04-12" },
       { id: "er-2", name: "Portador de Runa: Margit", description: "Derrota a Margit, el Presagio Caído en las puertas del Castillo Velo Tormentoso.", difficulty: "Fácil", unlocked: true, unlockedAt: "2022-03-03" },
@@ -59,6 +67,10 @@ export const INITIAL_GAMES: Game[] = [
     status: "Favoritos",
     coverColor: "#0f172a",
     coverSymbol: "crown",
+    coverImage: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co1r7f.jpg",
+    igdbId: 26226,
+    igdbRating: 91,
+    igdbUrl: "https://www.igdb.com/games/hollow-knight",
     achievements: [
       { id: "hk-1", name: "Corazón de Hallownest", description: "Completa el juego al 112%.", difficulty: "Difícil", unlocked: false },
       { id: "hk-2", name: "Falso Salvador", description: "Derrota al Caballero Falso en los Cruces Olvidados.", difficulty: "Fácil", unlocked: true, unlockedAt: "2019-07-22" },
@@ -81,6 +93,10 @@ export const INITIAL_GAMES: Game[] = [
     status: "Jugando",
     coverColor: "#171717",
     coverSymbol: "bolt",
+    coverImage: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co1r78.jpg",
+    igdbId: 1877,
+    igdbRating: 82,
+    igdbUrl: "https://www.igdb.com/games/cyberpunk-2077",
     achievements: [
       { id: "cp-1", name: "El Loco", description: "Conviértete en un mercenario de leyenda en Night City.", difficulty: "Fácil", unlocked: true, unlockedAt: "2021-12-26" },
       { id: "cp-2", name: "Ciberpsicópata de Nivel", description: "Neutraliza a todos los ciberpsicópatas de la ciudad sin matarlos.", difficulty: "Medio", unlocked: false },
@@ -103,6 +119,10 @@ export const INITIAL_GAMES: Game[] = [
     status: "Completado",
     coverColor: "#be123c",
     coverSymbol: "star",
+    coverImage: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co1myw.jpg",
+    igdbId: 26758,
+    igdbRating: 90,
+    igdbUrl: "https://www.igdb.com/games/super-mario-odyssey",
     achievements: [
       { id: "mo-1", name: "Viajero Interdimensional", description: "Consigue tu primera energiluna en el Reino Sombrero.", difficulty: "Fácil", unlocked: true, unlockedAt: "2018-01-05" },
       { id: "mo-2", name: "¡Salvados del Altar!", description: "Arruina los planes de boda de Bowser en la Luna.", difficulty: "Medio", unlocked: true, unlockedAt: "2018-01-15" },
@@ -125,6 +145,10 @@ export const INITIAL_GAMES: Game[] = [
     status: "Pendiente",
     coverColor: "#be185d",
     coverSymbol: "car",
+    coverImage: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co3f5l.jpg",
+    igdbId: 151665,
+    igdbRating: 88,
+    igdbUrl: "https://www.igdb.com/games/forza-horizon-5",
     achievements: [
       { id: "fh-1", name: "Bienvenidos a México", description: "Llega al festival Horizon de México y establece tu primer puesto.", difficulty: "Fácil", unlocked: true, unlockedAt: "2022-06-18" },
       { id: "fh-2", name: "Salón de la Fama", description: "Consigue suficientes puntos de galardón para entrar en el Salón de la Fama.", difficulty: "Medio", unlocked: false },
@@ -147,6 +171,10 @@ export const INITIAL_GAMES: Game[] = [
     status: "Favoritos",
     coverColor: "#581c87",
     coverSymbol: "sword",
+    coverImage: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co238w.jpg",
+    igdbId: 1251,
+    igdbRating: 91,
+    igdbUrl: "https://www.igdb.com/games/castlevania-symphony-of-the-night",
     achievements: [
       { id: "sotn-1", name: "El Castillo Invertido", description: "Descubre el secreto del castillo invertido y derrota a Richter controlado.", difficulty: "Medio", unlocked: true, unlockedAt: "2020-04-15" },
       { id: "sotn-2", name: "Espada de Crissaegrim", description: "Consigue la legendaria espada Crissaegrim de los Schmoo.", difficulty: "Difícil", unlocked: true, unlockedAt: "2020-04-18" },
@@ -168,6 +196,10 @@ export const INITIAL_GAMES: Game[] = [
     status: "Completado",
     coverColor: "#15803d",
     coverSymbol: "star",
+    coverImage: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co1xdm.jpg",
+    igdbId: 1068,
+    igdbRating: 92,
+    igdbUrl: "https://www.igdb.com/games/super-mario-world",
     achievements: [
       { id: "smw-1", name: "Amigo de Yoshi", description: "Rescata a Yoshi de su primer huevo en Dinosaur Land.", difficulty: "Fácil", unlocked: true, unlockedAt: "2015-08-12" },
       { id: "smw-2", name: "El Mundo Estelar", description: "Completa todas las salidas secretas de Star World.", difficulty: "Medio", unlocked: true, unlockedAt: "2015-08-14" },
@@ -189,6 +221,10 @@ export const INITIAL_GAMES: Game[] = [
     status: "Completado",
     coverColor: "#b91c1c",
     coverSymbol: "target",
+    coverImage: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co1xef.jpg",
+    igdbId: 1391,
+    igdbRating: 87,
+    igdbUrl: "https://www.igdb.com/games/metal-slug-3",
     achievements: [
       { id: "ms3-1", name: "Superviviente Alienígena", description: "Completa la misión final en la nave nodriza extraterrestre.", difficulty: "Difícil", unlocked: true, unlockedAt: "2018-11-08" },
       { id: "ms3-2", name: "Zombi Acorazado", description: "Transforma a tu personaje en zombi y usa la vomitona de sangre.", difficulty: "Fácil", unlocked: true, unlockedAt: "2018-11-05" }
@@ -196,3 +232,4 @@ export const INITIAL_GAMES: Game[] = [
     notes: "Animaciones de píxel art insuperables. Directo desde la época de las máquinas recreativas Neo Geo."
   }
 ];
+
