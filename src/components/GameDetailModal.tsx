@@ -613,7 +613,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                         >
                           {AVAILABLE_SYMBOLS.map((sym) => (
                             <option key={sym.id} value={sym.icon}>
-                              {sym.label}
+                              {sym.label[language] || sym.label["es"]}
                             </option>
                           ))}
                         </select>
