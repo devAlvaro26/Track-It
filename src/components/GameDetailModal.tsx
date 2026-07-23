@@ -15,7 +15,7 @@ interface GameDetailModalProps {
   language?: Language;
 }
 
-export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose, onUpdate, onDelete, language = "es" }) => {
+export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose, onUpdate, onDelete, language = "en" }) => {
   const t = getTranslation(language);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -107,7 +107,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
     if (selected.rating) setEditIgdbRating(selected.rating);
     if (selected.url) setEditIgdbUrl(selected.url);
 
-    setEditImportNotice(`¡Información de "${selected.name}" importada correctamente desde IGDB!`);
+    setEditImportNotice(t.igdbImportSuccess.replace("{name}", selected.name || ""));
   };
 
   // Helper to render vector EAN-13 barcode

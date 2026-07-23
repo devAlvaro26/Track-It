@@ -104,7 +104,4 @@ export const CONSOLES_LIST: ConsoleInfo[] = [
   { id: "retro-varios", name: "Retro / Varios", shortName: "Retro", category: "Arcade & Otros" },
 ];
 
-/**
- * Returns a list of all console names as string array for quick selector validation
- */
 export const ALL_CONSOLE_NAMES: string[] = CONSOLES_LIST.map((c) => c.name);

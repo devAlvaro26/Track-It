@@ -15,7 +15,7 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
   initialQuery = "",
   onClose,
   onSelectGame,
-  language = "es",
+  language = "en",
 }) => {
   const t = getTranslation(language);
   const [query, setQuery] = useState(initialQuery);
@@ -28,7 +28,7 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
 
   // Check IGDB API status on mount
   useEffect(() => {
-    fetch("/api/igdb/status")
+    fetch(`/api/igdb/status?lang=${language}`)
       .then((res) => res.json())
       .then((data) => {
         setIsConfigured(Boolean(data.configured));
@@ -40,9 +40,9 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
       })
       .catch(() => {
         setIsConfigured(false);
-        setStatusError("No se pudo conectar con el servidor local para comprobar el estado de la API.");
+        setStatusError(t.igdbStatusConnectionError);
       });
-  }, []);
+  }, [language, t.igdbStatusConnectionError]);
 
   const handleSearch = useCallback(async (searchTerm?: string) => {
     const q = (searchTerm !== undefined ? searchTerm : query).trim();
@@ -56,13 +56,13 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
       const res = await fetch("/api/igdb/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: q, limit: 10 }),
+        body: JSON.stringify({ query: q, limit: 10, lang: language }),
       });
 
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        setError(data.error || "Error al recibir respuesta de la API de IGDB.");
+        setError(data.error || t.igdbDefaultError);
         setResults([]);
         if (data.configured !== undefined) {
           setIsConfigured(data.configured);
@@ -76,9 +76,9 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
       }
 
       if (data.games && data.games.length > 0) {
-        setSearchNotice(`✓ Respuesta recibida con éxito de IGDB: ${data.games.length} juego(s) encontrado(s).`);
+        setSearchNotice(`✓ ${t.igdbSearchSuccessNotice.replace("{count}", String(data.games.length))}`);
       } else {
-        setSearchNotice(`ℹ️ Respuesta recibida de IGDB: 0 resultados encontrados para "${q}".`);
+        setSearchNotice(`ℹ️ ${t.igdbSearchZeroNotice.replace("{query}", q)}`);
       }
     } catch (err: any) {
       console.error("Error searching IGDB:", err);
@@ -87,15 +87,15 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [query, t.aiConnectionError]);
+  }, [query, language, t.igdbDefaultError, t.igdbSearchSuccessNotice, t.igdbSearchZeroNotice, t.aiConnectionError]);
 
-  // Perform initial search if query is provided
+  // Perform initial search once on mount if query is provided
   useEffect(() => {
     if (initialQuery.trim()) {
-      setQuery(initialQuery);
       handleSearch(initialQuery);
     }
-  }, [initialQuery, handleSearch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuery]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,9 +150,8 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span
-                className={`w-2 h-2 rounded-full ${
-                  isConfigured ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
-                }`}
+                className={`w-2 h-2 rounded-full ${isConfigured ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
+                  }`}
               />
               <span className="font-semibold text-neutral-700 dark:text-neutral-300">
                 {isConfigured ? t.igdbConnected : t.igdbNotConfigured}
@@ -172,7 +171,7 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
             <div className="mt-1 p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-800 dark:text-amber-300 flex items-start gap-2 text-xs">
               <Icons.AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold">Aviso de configuración / conexión: </span>
+                <span className="font-bold">{t.igdbConfigWarning} </span>
                 <span>{statusError}</span>
               </div>
             </div>
@@ -219,7 +218,7 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
             <div className="mt-3 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
               <Icons.AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold block">Error al consultar la API de IGDB:</span>
+                <span className="font-bold block">{t.igdbQueryErrorTitle}</span>
                 <span>{error}</span>
               </div>
             </div>
@@ -247,10 +246,10 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
             <div className="py-12 text-center space-y-2">
               <Icons.Gamepad2 className="w-10 h-10 text-neutral-300 dark:text-gray-700 mx-auto" />
               <p className="text-sm font-semibold text-neutral-600 dark:text-gray-300">
-                {query.trim() ? t.noGamesMatch : "Escribe el nombre de un videojuego arriba"}
+                {query.trim() ? t.noGamesMatch : t.igdbSearchPlaceholderPrompt}
               </p>
               <p className="text-xs text-neutral-400 dark:text-gray-500 max-w-sm mx-auto">
-                Escribe palabras clave de cualquier consola o franquicia para consultar la base de datos oficial.
+                {t.igdbSearchHint}
               </p>
             </div>
           ) : (
@@ -278,7 +277,7 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-neutral-400 p-2 text-center">
                         <Icons.ImageOff className="w-6 h-6 mb-1 opacity-50" />
-                        <span className="text-[9px] uppercase font-bold">Sin portada</span>
+                        <span className="text-[9px] uppercase font-bold">{t.noCoverText}</span>
                       </div>
                     )}
                   </div>
@@ -346,7 +345,7 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
         <div className="p-4 border-t border-neutral-100 dark:border-white/5 bg-neutral-50/50 dark:bg-[#1A1A1A]/30 flex justify-between items-center text-xs text-neutral-400">
           <span className="flex items-center gap-1.5">
             <Icons.CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
-            Poder de información oficial de IGDB.com
+            {t.igdbFooterCredits}
           </span>
           <button
             type="button"

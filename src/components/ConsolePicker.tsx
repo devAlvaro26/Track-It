@@ -13,7 +13,7 @@ interface ConsolePickerProps {
 export const ConsolePicker: React.FC<ConsolePickerProps> = ({
   selectedPlatforms,
   onChange,
-  language = "es",
+  language = "en",
 }) => {
   const { t, translateConsoleCategory } = useTranslation(language);
 

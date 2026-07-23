@@ -8,8 +8,8 @@ interface LibraryStatsPanelProps {
   language?: Language;
 }
 
-export const LibraryStatsPanel: React.FC<LibraryStatsPanelProps> = ({ games, language = "es" }) => {
-  const t = getTranslation((language as Language) || "es");
+export const LibraryStatsPanel: React.FC<LibraryStatsPanelProps> = ({ games, language = "en" }) => {
+  const t = getTranslation((language as Language) || "en");
 
   // Compute stats on the fly
   const totalGames = games.length;

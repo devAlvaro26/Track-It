@@ -10,17 +10,19 @@ let cachedTwitchToken: { token: string; expiresAt: number } | null = null;
 /**
  * Retrieves Twitch OAuth App Access Token required for IGDB API v4 calls.
  */
-async function getTwitchToken(): Promise<{ token: string | null; error?: string }> {
+async function getTwitchToken(lang: string = "en"): Promise<{ token: string | null; error?: string }> {
   const clientId = (process.env.TWITCH_CLIENT_ID || process.env.IGDB_CLIENT_ID || "").trim();
   const clientSecret = (process.env.TWITCH_CLIENT_SECRET || process.env.IGDB_CLIENT_SECRET || "").trim();
+  const isEs = lang === "es";
 
   // Guard against missing, empty or placeholder credentials
   if (!clientId || !clientSecret) {
-    return { token: null, error: "Faltan TWITCH_CLIENT_ID o TWITCH_CLIENT_SECRET en el archivo .env." };
-  }
-
-  if (clientId.toLowerCase().includes("your_") || clientSecret.toLowerCase().includes("your_")) {
-    return { token: null, error: "Las claves en .env contienen valores de ejemplo ('your_...'). Sustitúyelas por tus credenciales reales de Twitch Developer." };
+    return {
+      token: null,
+      error: isEs
+        ? "Faltan TWITCH_CLIENT_ID o TWITCH_CLIENT_SECRET en el archivo .env."
+        : "TWITCH_CLIENT_ID or TWITCH_CLIENT_SECRET missing from .env file.",
+    };
   }
 
   if (cachedTwitchToken && cachedTwitchToken.expiresAt > Date.now() + 60000) {
@@ -44,9 +46,14 @@ async function getTwitchToken(): Promise<{ token: string | null; error?: string 
       try {
         const json = JSON.parse(errText);
         msg = json.message || errText;
-      } catch (e) {}
+      } catch (e) { }
       console.warn("Twitch OAuth token request status", res.status, ":", msg);
-      return { token: null, error: `Error de autenticación con Twitch (HTTP ${res.status}): ${msg}` };
+      return {
+        token: null,
+        error: isEs
+          ? `Error de autenticación con Twitch (HTTP ${res.status}): ${msg}`
+          : `Twitch authentication error (HTTP ${res.status}): ${msg}`,
+      };
     }
 
     const data = await res.json();
@@ -58,7 +65,12 @@ async function getTwitchToken(): Promise<{ token: string | null; error?: string 
     return { token: cachedTwitchToken.token };
   } catch (err: any) {
     console.warn("Error fetching Twitch access token:", err);
-    return { token: null, error: `Error de conexión con la API de Twitch: ${err.message || "Desconocido"}` };
+    return {
+      token: null,
+      error: isEs
+        ? `Error de conexión con la API de Twitch: ${err.message || "Desconocido"}`
+        : `Twitch API connection error: ${err.message || "Unknown"}`,
+    };
   }
 }
 
@@ -96,46 +108,57 @@ async function startServer() {
 
   // Check IGDB configuration status
   app.get("/api/igdb/status", async (req, res) => {
+    const lang = (req.query.lang as string) || "en";
+    const isEs = lang === "es";
     const clientId = (process.env.TWITCH_CLIENT_ID || process.env.IGDB_CLIENT_ID || "").trim();
     const clientSecret = (process.env.TWITCH_CLIENT_SECRET || process.env.IGDB_CLIENT_SECRET || "").trim();
 
     if (!clientId || !clientSecret) {
       return res.json({
         configured: false,
-        message: "Configura TWITCH_CLIENT_ID y TWITCH_CLIENT_SECRET en el archivo .env para habilitar IGDB.",
+        message: isEs
+          ? "Configura TWITCH_CLIENT_ID y TWITCH_CLIENT_SECRET en el archivo .env para habilitar IGDB."
+          : "Configure TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET in .env file to enable IGDB.",
       });
     }
 
-    const auth = await getTwitchToken();
+    const auth = await getTwitchToken(lang);
     if (!auth.token) {
       return res.json({
         configured: false,
-        error: auth.error || "No se pudo obtener el token de Twitch OAuth.",
+        error: auth.error || (isEs ? "No se pudo obtener el token de Twitch OAuth." : "Could not obtain Twitch OAuth token."),
       });
     }
 
     res.json({
       configured: true,
-      message: "Conexión con la API v4 de IGDB verificada y activa.",
+      message: isEs
+        ? "Conexión con la API v4 de IGDB verificada y activa."
+        : "IGDB API v4 connection verified and active.",
     });
   });
 
   // Search games in IGDB API v4
   app.post("/api/igdb/search", async (req, res) => {
+    const lang = req.body?.lang || "en";
+    const isEs = lang === "es";
     try {
       const { query, limit = 10 } = req.body;
+
       if (!query || typeof query !== "string" || !query.trim()) {
-        return res.status(400).json({ error: "El término de búsqueda es requerido." });
+        return res.status(400).json({
+          error: isEs ? "El término de búsqueda es requerido." : "Search term is required.",
+        });
       }
 
       const clientId = (process.env.TWITCH_CLIENT_ID || process.env.IGDB_CLIENT_ID || "").trim();
-      const auth = await getTwitchToken();
+      const auth = await getTwitchToken(lang);
 
       if (!clientId || !auth.token) {
         return res.status(401).json({
           games: [],
           configured: false,
-          error: auth.error || "No se ha configurado la API de IGDB o las credenciales no son válidas.",
+          error: auth.error || (isEs ? "No se ha configurado la API de IGDB o las credenciales no son válidas." : "IGDB API is not configured or credentials are invalid."),
         });
       }
 
@@ -159,7 +182,9 @@ async function startServer() {
         return res.status(igdbRes.status).json({
           games: [],
           configured: true,
-          error: `Error de la API de IGDB (HTTP ${igdbRes.status}): ${errBody || "Error al realizar la consulta"}`
+          error: isEs
+            ? `Error de la API de IGDB (HTTP ${igdbRes.status}): ${errBody || "Error al realizar la consulta"}`
+            : `IGDB API error (HTTP ${igdbRes.status}): ${errBody || "Query error"}`,
         });
       }
 
@@ -168,7 +193,7 @@ async function startServer() {
         id: g.id,
         name: g.name,
         summary: g.summary || g.storyline || "",
-        firstReleaseDate: g.first_release_date 
+        firstReleaseDate: g.first_release_date
           ? new Date(g.first_release_date * 1000).toISOString().split("T")[0]
           : "",
         genres: g.genres ? g.genres.map((gen: any) => gen.name) : [],
@@ -184,13 +209,19 @@ async function startServer() {
         source: "igdb",
         configured: true,
         message: games.length > 0
-          ? `Búsqueda completada. Se obtuvieron ${games.length} resultado(s) de IGDB.`
-          : `Respuesta recibida de IGDB: 0 juegos encontrados para "${query}".`
+          ? (isEs
+            ? `Búsqueda completada. Se obtuvieron ${games.length} resultado(s) de IGDB.`
+            : `Search completed. Obtained ${games.length} result(s) from IGDB.`)
+          : (isEs
+            ? `Respuesta recibida de IGDB: 0 juegos encontrados para "${query}".`
+            : `Response received from IGDB: 0 games found for "${query}".`),
       });
 
     } catch (error: any) {
       console.error("Error en /api/igdb/search:", error);
-      res.status(500).json({ error: error.message || "Error interno al buscar juegos en IGDB." });
+      res.status(500).json({
+        error: error.message || (lang === "es" ? "Error interno al buscar juegos en IGDB." : "Internal error searching games in IGDB."),
+      });
     }
   });
 
@@ -215,4 +246,3 @@ async function startServer() {
 }
 
 startServer();
-

@@ -301,6 +301,62 @@ export const translationTable = {
     es: "Ver ficha en IGDB.com",
     en: "View page on IGDB.com",
   },
+  igdbImportSuccess: {
+    es: "¡Información de \"{name}\" importada correctamente desde IGDB!",
+    en: "Information for \"{name}\" imported successfully from IGDB!",
+  },
+  igdbStatusConnectionError: {
+    es: "No se pudo conectar con el servidor local para comprobar el estado de la API.",
+    en: "Could not connect to local server to check API status.",
+  },
+  igdbDefaultError: {
+    es: "Error al recibir respuesta de la API de IGDB.",
+    en: "Error receiving response from IGDB API.",
+  },
+  igdbSearchSuccessNotice: {
+    es: "Respuesta recibida con éxito de IGDB: {count} juego(s) encontrado(s).",
+    en: "Response received successfully from IGDB: {count} game(s) found.",
+  },
+  igdbSearchZeroNotice: {
+    es: "Respuesta recibida de IGDB: 0 resultados encontrados para \"{query}\".",
+    en: "Response received from IGDB: 0 results found for \"{query}\".",
+  },
+  igdbConfigWarning: {
+    es: "Aviso de configuración / conexión:",
+    en: "Configuration / connection notice:",
+  },
+  igdbQueryErrorTitle: {
+    es: "Error al consultar la API de IGDB:",
+    en: "Error querying IGDB API:",
+  },
+  igdbSearchPlaceholderPrompt: {
+    es: "Escribe el nombre de un videojuego arriba",
+    en: "Type a video game title above",
+  },
+  igdbSearchHint: {
+    es: "Escribe palabras clave de cualquier consola o franquicia para consultar la base de datos oficial.",
+    en: "Type keywords for any console or franchise to query the official database.",
+  },
+  noCoverText: {
+    es: "Sin portada",
+    en: "No cover art",
+  },
+  igdbFooterCredits: {
+    es: "Poder de información oficial de IGDB.com",
+    en: "Powered by official IGDB.com data",
+  },
+  removeImage: {
+    es: "Quitar imagen",
+    en: "Remove image",
+  },
+  previewCover: {
+    es: "Vista previa de la portada",
+    en: "Cover preview",
+  },
+  gameTitleDefault: {
+    es: "Título del juego",
+    en: "Game title",
+  },
   igdbModalTitle: {
     es: "Buscar Videojuego en IGDB",
     en: "Search Video Game on IGDB",
@@ -721,8 +777,8 @@ const translationCache: Partial<Record<Language, Record<TranslationKey, string>>
  * Converts the tabular `translationTable` into a fast key-value map for the specified language.
  * Results are cached in memory so subsequent calls in React component renders cost 0ms.
  */
-export function getTranslation(lang: Language | string = "es"): Record<TranslationKey, string> {
-  const selectedLang: Language = lang === "en" ? "en" : "es";
+export function getTranslation(lang: Language | string = "en"): Record<TranslationKey, string> {
+  const selectedLang: Language = lang === "es" ? "es" : "en";
 
   if (translationCache[selectedLang]) {
     return translationCache[selectedLang]!;
@@ -732,7 +788,7 @@ export function getTranslation(lang: Language | string = "es"): Record<Translati
   for (const k in translationTable) {
     const key = k as TranslationKey;
     const entry = translationTable[key];
-    dict[key] = entry[selectedLang] || entry.es;
+    dict[key] = entry[selectedLang] || entry.en;
   }
 
   translationCache[selectedLang] = dict;
@@ -742,10 +798,10 @@ export function getTranslation(lang: Language | string = "es"): Record<Translati
 /**
  * Direct tabular query helper for retrieving a single text key in a given language.
  */
-export function tKey(key: TranslationKey, lang: Language = "es"): string {
+export function tKey(key: TranslationKey, lang: Language = "en"): string {
   const entry = translationTable[key];
   if (!entry) return key;
-  return entry[lang === "en" ? "en" : "es"] || entry.es;
+  return entry[lang === "es" ? "es" : "en"] || entry.en;
 }
 
 /**
@@ -753,43 +809,59 @@ export function tKey(key: TranslationKey, lang: Language = "es"): string {
  */
 const genreDictionary: Record<string, { es: string; en: string }> = {
   plataformas: { es: "Plataformas", en: "Platformer" },
+  platformer: { es: "Plataformas", en: "Platformer" },
   aventura: { es: "Aventura", en: "Adventure" },
   aventuras: { es: "Aventuras", en: "Adventure" },
+  adventure: { es: "Aventura", en: "Adventure" },
   rpg: { es: "RPG", en: "RPG" },
   rol: { es: "Rol", en: "RPG" },
   metroidvania: { es: "Metroidvania", en: "Metroidvania" },
   acción: { es: "Acción", en: "Action" },
   accion: { es: "Acción", en: "Action" },
+  action: { es: "Acción", en: "Action" },
   carreras: { es: "Carreras", en: "Racing" },
+  racing: { es: "Carreras", en: "Racing" },
   simulador: { es: "Simulador", en: "Simulation" },
   simulación: { es: "Simulación", en: "Simulation" },
   simulacion: { es: "Simulación", en: "Simulation" },
+  simulation: { es: "Simulación", en: "Simulation" },
   terror: { es: "Terror", en: "Horror" },
+  horror: { es: "Terror", en: "Horror" },
   deportes: { es: "Deportes", en: "Sports" },
+  sports: { es: "Deportes", en: "Sports" },
   estrategia: { es: "Estrategia", en: "Strategy" },
+  strategy: { es: "Estrategia", en: "Strategy" },
   lucha: { es: "Lucha", en: "Fighting" },
   pelea: { es: "Pelea", en: "Fighting" },
+  fighting: { es: "Lucha", en: "Fighting" },
   disparos: { es: "Disparos", en: "Shooter" },
+  shooter: { es: "Disparos", en: "Shooter" },
   puzles: { es: "Puzles", en: "Puzzle" },
   puzzle: { es: "Puzles", en: "Puzzle" },
   puzzles: { es: "Puzles", en: "Puzzle" },
   rompecabezas: { es: "Rompecabezas", en: "Puzzle" },
   otros: { es: "Otros", en: "Others" },
+  others: { es: "Otros", en: "Others" },
+  other: { es: "Otros", en: "Others" },
   conducción: { es: "Conducción", en: "Racing" },
   conduccion: { es: "Conducción", en: "Racing" },
   supervivencia: { es: "Supervivencia", en: "Survival" },
+  survival: { es: "Supervivencia", en: "Survival" },
   sandbox: { es: "Sandbox", en: "Sandbox" },
   música: { es: "Música", en: "Music" },
   musica: { es: "Música", en: "Music" },
+  music: { es: "Música", en: "Music" },
   ritmo: { es: "Ritmo", en: "Rhythm" },
+  rhythm: { es: "Ritmo", en: "Rhythm" },
+  "run & gun": { es: "Run & Gun", en: "Run & Gun" },
 };
 
 /**
  * Translates genre strings (including compound genres like "Plataformas / Aventura") to the requested language.
  */
-export function translateGenre(genreStr: string = "", lang: Language | string = "es"): string {
+export function translateGenre(genreStr: string = "", lang: Language | string = "en"): string {
   if (!genreStr) return "";
-  const selectedLang = lang === "en" ? "en" : "es";
+  const selectedLang = lang === "es" ? "es" : "en";
 
   // Split by slashes or commas
   const parts = genreStr.split("/").map((p) => p.trim());
@@ -817,7 +889,7 @@ export function translateGenre(genreStr: string = "", lang: Language | string = 
 /**
  * Translates console category IDs to localized display names.
  */
-export function translateConsoleCategory(categoryId: string, lang: Language | string = "es"): string {
+export function translateConsoleCategory(categoryId: string, lang: Language | string = "en"): string {
   const t = getTranslation(lang);
   switch (categoryId) {
     case "all":
@@ -865,7 +937,7 @@ const symbolTranslationMap: Record<string, TranslationKey> = {
 /**
  * Translates symbol icon labels for cover selection.
  */
-export function translateSymbolLabel(symbolId: string, lang: Language | string = "es"): string {
+export function translateSymbolLabel(symbolId: string, lang: Language | string = "en"): string {
   const t = getTranslation(lang);
   const key = symbolTranslationMap[symbolId];
   if (key && t[key]) {
@@ -878,8 +950,8 @@ export function translateSymbolLabel(symbolId: string, lang: Language | string =
  * Standardized custom hook for React components.
  * Provides dictionary and translation helper functions in a single hook call.
  */
-export function useTranslation(lang: Language | string = "es") {
-  const selectedLang: Language = lang === "en" ? "en" : "es";
+export function useTranslation(lang: Language | string = "en") {
+  const selectedLang: Language = lang === "es" ? "es" : "en";
   const t = getTranslation(selectedLang);
   return {
     t,

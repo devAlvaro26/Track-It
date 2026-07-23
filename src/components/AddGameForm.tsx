@@ -12,7 +12,7 @@ interface AddGameFormProps {
   language?: Language;
 }
 
-export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, language = "es" }) => {
+export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, language = "en" }) => {
   const t = getTranslation(language);
 
   const [title, setTitle] = useState("");
@@ -51,7 +51,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
     if (selected.rating) setIgdbRating(selected.rating);
     if (selected.url) setIgdbUrl(selected.url);
 
-    setImportNotice(`¡Información de "${selected.name}" importada correctamente desde IGDB!`);
+    setImportNotice(t.igdbImportSuccess.replace("{name}", selected.name || ""));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -205,7 +205,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
                         type="button"
                         onClick={() => setCoverImage("")}
                         className="px-2 text-neutral-400 hover:text-rose-500 transition-colors"
-                        title="Quitar imagen"
+                        title={t.removeImage}
                       >
                         <Icons.XCircle className="w-4 h-4" />
                       </button>
@@ -377,7 +377,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
                     {coverImage ? (
                       <img
                         src={coverImage}
-                        alt="Preview"
+                        alt={t.previewCover}
                         className="absolute inset-0 w-full h-full object-cover"
                         referrerPolicy="no-referrer"
                       />
@@ -387,7 +387,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
                       </div>
                     )}
                     <div className="absolute bottom-2 left-3 right-3 text-white drop-shadow">
-                      <p className="text-xs font-bold truncate">{title || "Título del juego"}</p>
+                      <p className="text-xs font-bold truncate">{title || t.gameTitleDefault}</p>
                     </div>
                   </div>
                   

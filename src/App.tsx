@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Game, AppSettings, Language } from "./types";
-import { INITIAL_GAMES } from "./initialGames";
+import { getInitialGames } from "./initialGames";
 import { GameCard } from "./components/GameCard";
 import { GameDetailModal } from "./components/GameDetailModal";
 import { AddGameForm } from "./components/AddGameForm";
@@ -19,7 +19,7 @@ export default function App() {
 
     return {
       theme: savedTheme || "dark",
-      language: savedLang || "es",
+      language: savedLang || "en",
       username: savedUser || "Gamer",
     };
   });
@@ -36,7 +36,8 @@ export default function App() {
         console.error("Error loading games from localStorage", e);
       }
     }
-    return INITIAL_GAMES;
+    const savedLang = (localStorage.getItem("language") as Language | null) || "en";
+    return getInitialGames(savedLang);
   });
 
   // UI state
@@ -140,11 +141,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen transition-colors duration-300 bg-neutral-50 dark:bg-[#0A0A0A] text-neutral-800 dark:text-gray-100 font-sans" id="app-root">
-      
+
       {/* HEADER SECTION */}
       <header className="sticky top-0 z-30 border-b border-neutral-200/60 dark:border-white/5 bg-white/85 dark:bg-[#121212]/90 backdrop-blur-md px-6 py-4" id="app-header">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-          
+
           {/* Logo & User Welcome */}
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-500/10 flex items-center justify-center">
@@ -167,7 +168,7 @@ export default function App() {
 
           {/* Action Header controls */}
           <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-            
+
             {/* Settings Button */}
             <button
               onClick={() => setIsSettingsOpen(true)}
@@ -196,15 +197,15 @@ export default function App() {
 
       {/* MAIN LAYOUT WRAPPER */}
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8" id="app-main-content">
-        
+
         {/* Statistics board */}
         <LibraryStatsPanel games={games} language={settings.language} />
 
         {/* CONTROLS BAR: SEARCH, FILTERS, AND SORTING */}
         <div className="p-5 bg-white dark:bg-[#121212] rounded-2xl border border-neutral-200/60 dark:border-white/5 flex flex-col gap-4" id="controls-section">
-          
+
           <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
-            
+
             {/* Search Input */}
             <div className="relative w-full md:w-1/3">
               <Icons.Search className="absolute left-3.5 top-3 w-4 h-4 text-neutral-400" />
@@ -228,7 +229,7 @@ export default function App() {
 
             {/* Quick platform scroll buttons / filter drops */}
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
-              
+
               {/* Status Filter */}
               <div className="flex items-center gap-1.5 bg-neutral-50 dark:bg-[#1A1A1A] border border-neutral-200 dark:border-white/5 px-3 py-1.5 rounded-xl">
                 <Icons.Layers className="w-4 h-4 text-neutral-400" />

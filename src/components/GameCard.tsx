@@ -11,7 +11,7 @@ interface GameCardProps {
   language?: Language;
 }
 
-export const GameCard: React.FC<GameCardProps> = ({ game, onClick, language = "es" }) => {
+export const GameCard: React.FC<GameCardProps> = ({ game, onClick, language = "en" }) => {
   const t = getTranslation(language);
 
   const totalAchievements = game.achievements.length;
@@ -63,12 +63,12 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onClick, language = "e
         
         {/* Platform logo & Star Rating / IGDB Badge (Top Bar) */}
         <div className="z-10 flex justify-between items-center">
-          <span className="text-[10px] font-bold tracking-widest text-white/90 uppercase px-2 py-0.5 rounded-md bg-black/40 backdrop-blur-md border border-white/10">
+          <span className="text-[10px] font-bold tracking-widest text-white/90 uppercase px-2.5 py-0.5 rounded-md bg-black/40 backdrop-blur-md border border-white/10">
             {game.platforms[0] || "GAME"}
           </span>
           <div className="flex items-center gap-1.5">
             {game.igdbRating !== undefined && (
-              <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-indigo-600/90 text-white backdrop-blur-md border border-indigo-400/30 flex items-center gap-1 shadow-sm" title={`Score IGDB: ${game.igdbRating}/100`}>
+              <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-indigo-600/90 text-white backdrop-blur-md border border-indigo-400/30 flex items-center gap-1 shadow-sm" title={`${t.igdbRating}: ${game.igdbRating}/100`}>
                 <Icons.Database className="w-2.5 h-2.5" />
                 {game.igdbRating}
               </span>
