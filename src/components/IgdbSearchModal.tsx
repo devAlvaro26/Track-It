@@ -22,6 +22,8 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
   const [results, setResults] = useState<IgdbSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [searchNotice, setSearchNotice] = useState("");
+  const [statusError, setStatusError] = useState("");
   const [isConfigured, setIsConfigured] = useState<boolean | null>(null);
 
   // Check IGDB API status on mount
@@ -30,9 +32,15 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
       .then((res) => res.json())
       .then((data) => {
         setIsConfigured(Boolean(data.configured));
+        if (data.error) {
+          setStatusError(data.error);
+        } else {
+          setStatusError("");
+        }
       })
       .catch(() => {
         setIsConfigured(false);
+        setStatusError("No se pudo conectar con el servidor local para comprobar el estado de la API.");
       });
   }, []);
 
@@ -42,6 +50,7 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
 
     setIsLoading(true);
     setError("");
+    setSearchNotice("");
 
     try {
       const res = await fetch("/api/igdb/search", {
@@ -50,18 +59,31 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
         body: JSON.stringify({ query: q, limit: 10 }),
       });
 
-      if (!res.ok) {
-        throw new Error(t.aiConnectionError);
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        setError(data.error || "Error al recibir respuesta de la API de IGDB.");
+        setResults([]);
+        if (data.configured !== undefined) {
+          setIsConfigured(data.configured);
+        }
+        return;
       }
 
-      const data = await res.json();
       setResults(data.games || []);
       if (data.configured !== undefined) {
         setIsConfigured(data.configured);
       }
+
+      if (data.games && data.games.length > 0) {
+        setSearchNotice(`✓ Respuesta recibida con éxito de IGDB: ${data.games.length} juego(s) encontrado(s).`);
+      } else {
+        setSearchNotice(`ℹ️ Respuesta recibida de IGDB: 0 resultados encontrados para "${q}".`);
+      }
     } catch (err: any) {
       console.error("Error searching IGDB:", err);
       setError(err.message || t.aiConnectionError);
+      setResults([]);
     } finally {
       setIsLoading(false);
     }
@@ -124,24 +146,36 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
         </div>
 
         {/* IGDB Status Banner */}
-        <div className="px-5 py-2.5 bg-neutral-100/70 dark:bg-neutral-900/50 border-b border-neutral-200/50 dark:border-white/5 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                isConfigured ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
-              }`}
-            />
-            <span className="font-semibold text-neutral-700 dark:text-neutral-300">
-              {isConfigured ? t.igdbConnected : t.igdbNotConfigured}
-            </span>
+        <div className="px-5 py-2.5 bg-neutral-100/70 dark:bg-neutral-900/50 border-b border-neutral-200/50 dark:border-white/5 flex flex-col gap-1 text-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  isConfigured ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
+                }`}
+              />
+              <span className="font-semibold text-neutral-700 dark:text-neutral-300">
+                {isConfigured ? t.igdbConnected : t.igdbNotConfigured}
+              </span>
+            </div>
+            {!isConfigured && !statusError && (
+              <span
+                className="text-[11px] text-neutral-500 dark:text-gray-400 truncate max-w-[420px]"
+                title={t.igdbConfigureHint}
+              >
+                ℹ️ {t.igdbConfigureHint}
+              </span>
+            )}
           </div>
-          {!isConfigured && (
-            <span
-              className="text-[11px] text-neutral-500 dark:text-gray-400 truncate max-w-[420px]"
-              title={t.igdbConfigureHint}
-            >
-              ℹ️ {t.igdbConfigureHint}
-            </span>
+
+          {statusError && (
+            <div className="mt-1 p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-800 dark:text-amber-300 flex items-start gap-2 text-xs">
+              <Icons.AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold">Aviso de configuración / conexión: </span>
+                <span>{statusError}</span>
+              </div>
+            </div>
           )}
         </div>
 
@@ -180,11 +214,23 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
             </button>
           </form>
 
+          {/* Error Alert Box */}
           {error && (
-            <p className="mt-2 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-              <Icons.AlertCircle className="w-4 h-4" />
-              {error}
-            </p>
+            <div className="mt-3 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
+              <Icons.AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block">Error al consultar la API de IGDB:</span>
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Success / Result Notice Banner */}
+          {!error && searchNotice && (
+            <div className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2 font-medium">
+              <Icons.CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+              <span>{searchNotice}</span>
+            </div>
           )}
         </div>
 

@@ -20,6 +20,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
 
   const [isEditing, setIsEditing] = useState(false);
   const [showIgdbModal, setShowIgdbModal] = useState(false);
+  const [editImportNotice, setEditImportNotice] = useState("");
 
   const [editTitle, setEditTitle] = useState(game.title);
   const [editDescription, setEditDescription] = useState(game.description);
@@ -105,6 +106,8 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
     if (selected.id) setEditIgdbId(selected.id);
     if (selected.rating) setEditIgdbRating(selected.rating);
     if (selected.url) setEditIgdbUrl(selected.url);
+
+    setEditImportNotice(`¡Información de "${selected.name}" importada correctamente desde IGDB!`);
   };
 
   // Helper to render vector EAN-13 barcode
@@ -492,6 +495,22 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
               /* ================= EDIT MODE ================= */
               <form onSubmit={handleSaveFullEdit} className="p-6 space-y-6">
                 
+                {editImportNotice && (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-2 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <Icons.CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                      <span className="font-semibold">{editImportNotice}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditImportNotice("")}
+                      className="text-emerald-600 dark:text-emerald-400 hover:opacity-75 transition-opacity cursor-pointer"
+                    >
+                      <Icons.X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex justify-between items-center pb-4 border-b border-neutral-100 dark:border-white/5">
                   <h2 className="text-lg font-bold text-neutral-800 dark:text-white flex items-center gap-2">
                     <Icons.Edit3 className="w-5 h-5 text-indigo-500" />
@@ -753,6 +772,15 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
 
         </motion.div>
       </div>
+
+      {showIgdbModal && (
+        <IgdbSearchModal
+          initialQuery={editTitle || game.title}
+          language={language}
+          onClose={() => setShowIgdbModal(false)}
+          onSelectGame={handleSelectIgdbGame}
+        />
+      )}
     </>
   );
 };

@@ -36,6 +36,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
 
   // IGDB Modal state
   const [showIgdbModal, setShowIgdbModal] = useState(false);
+  const [importNotice, setImportNotice] = useState("");
 
   // Handle selection from IGDB Search Modal
   const handleSelectIgdbGame = (selected: IgdbSearchResult) => {
@@ -49,6 +50,8 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
     if (selected.id) setIgdbId(selected.id);
     if (selected.rating) setIgdbRating(selected.rating);
     if (selected.url) setIgdbUrl(selected.url);
+
+    setImportNotice(`¡Información de "${selected.name}" importada correctamente desde IGDB!`);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -130,6 +133,22 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
           {/* Content Form */}
           <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(100vh-180px)] space-y-6">
             
+            {importNotice && (
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-2 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Icons.CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <span className="font-semibold">{importNotice}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setImportNotice("")}
+                  className="text-emerald-600 dark:text-emerald-400 hover:opacity-75 transition-opacity cursor-pointer"
+                >
+                  <Icons.X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               {/* Left Column: Basic Info */}
@@ -546,6 +565,15 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
 
         </div>
       </div>
+
+      {showIgdbModal && (
+        <IgdbSearchModal
+          initialQuery={title}
+          language={language}
+          onClose={() => setShowIgdbModal(false)}
+          onSelectGame={handleSelectIgdbGame}
+        />
+      )}
     </>
   );
 };
