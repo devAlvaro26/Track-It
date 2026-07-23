@@ -1,12 +1,21 @@
 import { useState, useEffect } from "react";
 import { Game, AppSettings, Language } from "./types";
-import { getInitialGames } from "./initialGames";
 import { GameCard } from "./components/GameCard";
 import { GameDetailModal } from "./components/GameDetailModal";
 import { AddGameForm } from "./components/AddGameForm";
 import { LibraryStatsPanel } from "./components/LibraryStatsPanel";
 import { SettingsModal } from "./components/SettingsModal";
+import { AuthModal } from "./components/AuthModal";
 import { getTranslation, translateGenre } from "./translations";
+import {
+  db,
+  isDatabaseConfigured,
+  fetchUserGamesFromDb,
+  saveGameToDb,
+  deleteGameFromDb,
+  fetchUserProfile,
+  saveUserProfile,
+} from "./lib/database";
 import * as Icons from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -18,7 +27,7 @@ export default function App() {
     const savedUser = localStorage.getItem("username");
 
     return {
-      theme: savedTheme || "dark",
+      theme: savedTheme || "light",
       language: savedLang || "en",
       username: savedUser || "Gamer",
     };
@@ -26,9 +35,14 @@ export default function App() {
 
   const t = getTranslation(settings.language);
 
-  // Games list: initialized from local storage or mock seed data
+  // User Auth & Session state
+  const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [syncLoading, setSyncLoading] = useState(false);
+
+  // Games list: initialized empty or loaded from database / localStorage for current user
   const [games, setGames] = useState<Game[]>(() => {
-    const saved = localStorage.getItem("game_library");
+    const saved = localStorage.getItem("game_library_user");
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -36,14 +50,14 @@ export default function App() {
         console.error("Error loading games from localStorage", e);
       }
     }
-    const savedLang = (localStorage.getItem("language") as Language | null) || "en";
-    return getInitialGames(savedLang);
+    return [];
   });
 
-  // UI state
+  // UI Modals state
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   // Search, filter and sorting state
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,42 +78,145 @@ export default function App() {
     localStorage.setItem("username", settings.username);
   }, [settings]);
 
-  // Sync games to localStorage
+  // Save local games cache
   useEffect(() => {
-    localStorage.setItem("game_library", JSON.stringify(games));
-  }, [games]);
+    if (!user) {
+      localStorage.setItem("game_library_user", JSON.stringify(games));
+    }
+  }, [games, user]);
 
-  // Quick theme toggle
-  const toggleTheme = () => {
-    setSettings((prev) => ({
-      ...prev,
-      theme: prev.theme === "dark" ? "light" : "dark",
-    }));
+  // Listen to database auth state
+  useEffect(() => {
+    if (!db || !isDatabaseConfigured) {
+      setAuthLoading(false);
+      return;
+    }
+
+    db.auth.getSession().then(({ data: { session } }) => {
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+      if (currentUser) {
+        loadUserData(currentUser.id, currentUser.user_metadata?.username);
+      } else {
+        setAuthLoading(false);
+      }
+    });
+
+    const { data: authListener } = db.auth.onAuthStateChange(async (event, session) => {
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+      if (event === "SIGNED_IN" && currentUser) {
+        loadUserData(currentUser.id, currentUser.user_metadata?.username);
+      } else if (event === "SIGNED_OUT") {
+        setGames([]);
+        localStorage.removeItem("game_library_user");
+        setAuthLoading(false);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  // Load user data from database
+  const loadUserData = async (userId: string, defaultUsername?: string) => {
+    setSyncLoading(true);
+    try {
+      // 1. Load user games
+      const userGames = await fetchUserGamesFromDb(userId);
+      setGames(userGames);
+
+      // 2. Load user profile
+      const profile = await fetchUserProfile(userId);
+      if (profile) {
+        setSettings((prev) => ({
+          ...prev,
+          username: profile.username || defaultUsername || prev.username,
+          language: (profile.language as Language) || prev.language,
+          theme: (profile.theme as "light" | "dark") || prev.theme,
+        }));
+      } else if (defaultUsername) {
+        setSettings((prev) => ({ ...prev, username: defaultUsername }));
+      }
+    } catch (err) {
+      console.error("Error loading user data from database:", err);
+    } finally {
+      setSyncLoading(false);
+      setAuthLoading(false);
+    }
   };
 
-  const handleSaveSettings = (newSettings: AppSettings) => {
+  // Auth logout handler
+  const handleLogout = async () => {
+    if (db && isDatabaseConfigured) {
+      await db.auth.signOut();
+    }
+    setUser(null);
+    setGames([]);
+    localStorage.removeItem("game_library_user");
+  };
+
+  // Auth login success handler
+  const handleAuthSuccess = (authUser: any, customUsername?: string) => {
+    setUser(authUser);
+    const uName = customUsername || authUser.user_metadata?.username || authUser.email?.split("@")[0] || "Gamer";
+    setSettings((prev) => ({ ...prev, username: uName }));
+    loadUserData(authUser.id, uName);
+  };
+
+  // Handle settings update
+  const handleSaveSettings = async (newSettings: AppSettings) => {
     setSettings(newSettings);
+    if (user && isDatabaseConfigured) {
+      await saveUserProfile(user.id, newSettings);
+    }
   };
 
   // Add a new game
-  const handleAddGame = (newGameData: Omit<Game, "id">) => {
+  const handleAddGame = async (newGameData: Omit<Game, "id">) => {
     const newGame: Game = {
       ...newGameData,
-      id: `game-id-${Date.now()}`,
+      id: `game-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     };
-    setGames([newGame, ...games]);
+
+    setGames((prev) => [newGame, ...prev]);
     setIsAddOpen(false);
+
+    if (user && isDatabaseConfigured) {
+      try {
+        await saveGameToDb(newGame, user.id);
+      } catch (err) {
+        console.error("Could not sync added game to database:", err);
+      }
+    }
   };
 
   // Update game details (achievements, rating, play hours, etc.)
-  const handleUpdateGame = (updatedGame: Game) => {
-    setGames(games.map((g) => (g.id === updatedGame.id ? updatedGame : g)));
+  const handleUpdateGame = async (updatedGame: Game) => {
+    setGames((prev) => prev.map((g) => (g.id === updatedGame.id ? updatedGame : g)));
+
+    if (user && isDatabaseConfigured) {
+      try {
+        await saveGameToDb(updatedGame, user.id);
+      } catch (err) {
+        console.error("Could not sync updated game to database:", err);
+      }
+    }
   };
 
   // Delete a game
-  const handleDeleteGame = (id: string) => {
-    setGames(games.filter((g) => g.id !== id));
+  const handleDeleteGame = async (id: string) => {
+    setGames((prev) => prev.filter((g) => g.id !== id));
     setSelectedGameId(null);
+
+    if (user && isDatabaseConfigured) {
+      try {
+        await deleteGameFromDb(id, user.id);
+      } catch (err) {
+        console.error("Could not delete game from database:", err);
+      }
+    }
   };
 
   // Get current selected game
@@ -144,7 +261,7 @@ export default function App() {
 
       {/* HEADER SECTION */}
       <header className="sticky top-0 z-30 border-b border-neutral-200/60 dark:border-white/5 bg-white/85 dark:bg-[#121212]/90 backdrop-blur-md px-6 py-4" id="app-header">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
 
           {/* Logo & User Welcome */}
           <div className="flex items-center gap-3">
@@ -160,27 +277,59 @@ export default function App() {
                   {settings.username}
                 </span>
               </div>
+              <p className="text-xs text-neutral-500 dark:text-gray-400 flex items-center gap-1.5 mt-0.5">
+                {user ? (
+                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                    <Icons.CloudCheck size={14} />
+                    <span>{user.email}</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                    <Icons.CloudOff size={14} />
+                    <span>{t.guestMode}</span>
+                  </span>
+                )}
+              </p>
             </div>
           </div>
 
           {/* Action Header controls */}
-          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+
+            {/* User Auth Button */}
+            {user ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold transition-all cursor-pointer border border-red-500/20"
+                title={t.logoutBtn}
+              >
+                <Icons.LogOut className="w-4 h-4" />
+                <span>{t.logoutBtn}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsAuthOpen(true)}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold transition-all cursor-pointer border border-indigo-500/20"
+              >
+                <Icons.LogIn className="w-4 h-4" />
+                <span>{t.loginBtn}</span>
+              </button>
+            )}
 
             {/* Settings Button */}
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-white/5 hover:bg-neutral-100 dark:hover:bg-[#1A1A1A] transition-colors cursor-pointer text-neutral-700 dark:text-gray-300 text-xs font-bold"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-neutral-200 dark:border-white/5 hover:bg-neutral-100 dark:hover:bg-[#1A1A1A] transition-colors cursor-pointer text-neutral-700 dark:text-gray-300 text-xs font-bold"
               title={t.settings}
               id="btn-open-settings"
             >
               <Icons.Settings className="w-4 h-4 text-indigo-500" />
-              <span className="hidden sm:inline">{t.settings}</span>
             </button>
 
             {/* Add Game Button */}
             <button
               onClick={() => setIsAddOpen(true)}
-              className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-600/15 transition-all hover:scale-[1.02] cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-600/15 transition-all hover:scale-[1.02] cursor-pointer"
               id="btn-open-add"
             >
               <Icons.Plus className="w-4 h-4 stroke-[3]" />
@@ -194,6 +343,14 @@ export default function App() {
 
       {/* MAIN LAYOUT WRAPPER */}
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8" id="app-main-content">
+
+        {/* Sync Indicator */}
+        {syncLoading && (
+          <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-indigo-600 dark:text-indigo-400 text-xs flex items-center justify-center gap-2 font-bold animate-pulse">
+            <Icons.Loader2 className="w-4 h-4 animate-spin" />
+            <span>{t.syncingData}</span>
+          </div>
+        )}
 
         {/* Statistics board */}
         <LibraryStatsPanel games={games} language={settings.language} />
@@ -309,17 +466,25 @@ export default function App() {
                 {t.noGamesMatchDesc}
               </p>
             </div>
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setStatusFilter("All");
-                setPlatformFilter("All");
-                setSortBy("acquisitionDate");
-              }}
-              className="text-xs font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 px-4 py-2 rounded-xl hover:bg-indigo-500/5 transition-all cursor-pointer"
-            >
-              {t.resetFilters}
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setStatusFilter("All");
+                  setPlatformFilter("All");
+                  setSortBy("acquisitionDate");
+                }}
+                className="text-xs font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 px-4 py-2 rounded-xl hover:bg-indigo-500/5 transition-all cursor-pointer"
+              >
+                {t.resetFilters}
+              </button>
+              <button
+                onClick={() => setIsAddOpen(true)}
+                className="text-xs font-bold text-white bg-indigo-600 px-4 py-2 rounded-xl hover:bg-indigo-500 transition-all cursor-pointer shadow-md shadow-indigo-600/15"
+              >
+                + {t.addGame}
+              </button>
+            </div>
           </div>
         ) : (
           <motion.div
@@ -349,7 +514,7 @@ export default function App() {
             © {new Date().getFullYear()} {t.appTitle}. {t.madeWithLove}
           </p>
           <p className="text-[10px] text-neutral-400 dark:text-gray-500">
-            {t.footerTechNote}
+            {t.footerTechNote} • {user ? t.cloudSynced : t.localStorageNotice}
           </p>
         </div>
       </footer>
@@ -361,6 +526,17 @@ export default function App() {
             settings={settings}
             onSaveSettings={handleSaveSettings}
             onClose={() => setIsSettingsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* AUTH MODAL OVERLAY */}
+      <AnimatePresence>
+        {isAuthOpen && (
+          <AuthModal
+            language={settings.language}
+            onClose={() => setIsAuthOpen(false)}
+            onSuccess={handleAuthSuccess}
           />
         )}
       </AnimatePresence>

@@ -24,6 +24,192 @@ export const translationTable = {
     en: "Settings",
   },
 
+  // --- AUTHENTICATION ---
+  loginTitle: {
+    es: "Iniciar Sesión",
+    en: "Sign In",
+  },
+  signupTitle: {
+    es: "Crear Cuenta",
+    en: "Create Account",
+  },
+  authSubtitle: {
+    es: "Conéctate para guardar y sincronizar tu colección en la nube con tu base de datos",
+    en: "Connect to save and sync your collection in the cloud with your database",
+  },
+  emailLabel: {
+    es: "Correo electrónico",
+    en: "Email address",
+  },
+  passwordLabel: {
+    es: "Contraseña",
+    en: "Password",
+  },
+  confirmPasswordLabel: {
+    es: "Confirmar Contraseña",
+    en: "Confirm Password",
+  },
+  alreadyHaveAccount: {
+    es: "¿Ya tienes una cuenta?",
+    en: "Already have an account?",
+  },
+  dontHaveAccount: {
+    es: "¿No tienes cuenta?",
+    en: "Don't have an account?",
+  },
+  loginBtn: {
+    es: "Iniciar Sesión",
+    en: "Sign In",
+  },
+  signupBtn: {
+    es: "Registrarse",
+    en: "Sign Up",
+  },
+  logoutBtn: {
+    es: "Cerrar Sesión",
+    en: "Sign Out",
+  },
+  loginSuccess: {
+    es: "¡Sesión iniciada correctamente!",
+    en: "Logged in successfully!",
+  },
+  signupSuccess: {
+    es: "¡Cuenta registrada correctamente!",
+    en: "Account registered successfully!",
+  },
+  logoutSuccess: {
+    es: "Sesión cerrada.",
+    en: "Logged out.",
+  },
+  guestMode: {
+    es: "Modo Local (Sin Base de Datos)",
+    en: "Local Mode (No Database)",
+  },
+  databaseNotConnected: {
+    es: "Base de datos no configurada",
+    en: "Database not configured",
+  },
+  databaseConnected: {
+    es: "Base de datos conectada",
+    en: "Database connected",
+  },
+  databaseSetupGuide: {
+    es: "Ver Instrucciones de Base de Datos",
+    en: "View Database Instructions",
+  },
+  syncingData: {
+    es: "Cargando datos...",
+    en: "Loading data...",
+  },
+  userProfile: {
+    es: "Perfil de Usuario",
+    en: "User Profile",
+  },
+  cloudSynced: {
+    es: "Datos guardados en la nube (Base de datos)",
+    en: "Data saved in cloud (Database)",
+  },
+  localStorageNotice: {
+    es: "Guardando temporalmente en el navegador",
+    en: "Saving temporarily in browser",
+  },
+  databaseWarningDesc: {
+    es: "Para sincronizar usuarios y juegos con tu base de datos real en Vercel, debes configurar las claves de la API.",
+    en: "To sync users and games with your real database on Vercel, you must set up the API keys.",
+  },
+  databaseNotConfiguredErr: {
+    es: "La base de datos no está configurada aún con las variables necesarias de entorno.",
+    en: "The database is not configured yet with the required environment variables.",
+  },
+  fillEmailPasswordErr: {
+    es: "Por favor rellena el email y la contraseña.",
+    en: "Please fill in email and password.",
+  },
+  usernameRequiredErr: {
+    es: "El nombre de usuario es obligatorio para el registro.",
+    en: "Username is required for sign up.",
+  },
+  authDefaultErr: {
+    es: "Error al autenticar.",
+    en: "Authentication error.",
+  },
+  signingIn: {
+    es: "Iniciando...",
+    en: "Signing in...",
+  },
+  signingUp: {
+    es: "Registrando...",
+    en: "Signing up...",
+  },
+  databaseGuideTitle: {
+    es: "Guía de Configuración de la Base de Datos + Vercel",
+    en: "Database + Vercel Setup Guide",
+  },
+  databaseGuideSubtitle: {
+    es: "Instrucciones paso a paso para crear tu base de datos y conectar las credenciales",
+    en: "Step-by-step instructions to create your database and link credentials",
+  },
+  step1Title: {
+    es: "Crear un proyecto de base de datos",
+    en: "Create a database project",
+  },
+  step1Bullet1: {
+    es: "Accede a tu panel de base de datos y crea una nueva cuenta o inicia sesión.",
+    en: "Go to your database dashboard and create an account or sign in.",
+  },
+  step1Bullet2: {
+    es: "Crea un nuevo proyecto e indica un nombre y contraseña de la base de datos.",
+    en: "Create a new project, setting a name and database password.",
+  },
+  step1Bullet3: {
+    es: "En Vercel, también puedes ir a tu proyecto -> Integrations y conectar tu base de datos directamente.",
+    en: "In Vercel, you can go to your project -> Integrations and connect your database directly.",
+  },
+  step2Title: {
+    es: "Ejecutar el Script SQL de la Base de Datos",
+    en: "Execute the Database SQL Script",
+  },
+  step2Desc: {
+    es: "En el panel de tu base de datos, ve a 'SQL Editor' -> 'New Query', pega el siguiente código y pulsa 'Run':",
+    en: "In your database dashboard, go to 'SQL Editor' -> 'New Query', paste the code below and click 'Run':",
+  },
+  copySql: {
+    es: "Copiar SQL",
+    en: "Copy SQL",
+  },
+  copiedSql: {
+    es: "¡Copiado!",
+    en: "Copied!",
+  },
+  step3Title: {
+    es: "Desactivar la Verificación de Correo (Sin confirmación de email)",
+    en: "Disable Email Confirmation (No email verification)",
+  },
+  step3Desc: {
+    es: "Para que los usuarios puedan registrarse e iniciar sesión de inmediato sin tener que verificar su email:",
+    en: "To allow users to sign up and log in immediately without having to confirm their email:",
+  },
+  step3Bullet1: {
+    es: "En tu panel de base de datos, ve al menú lateral: Authentication -> Providers -> Email.",
+    en: "In your database dashboard, go to left menu: Authentication -> Providers -> Email.",
+  },
+  step3Bullet2: {
+    es: "Desmarca / Desactiva la opción 'Confirm email'.",
+    en: "Uncheck / Disable the 'Confirm email' setting.",
+  },
+  step3Bullet3: {
+    es: "Guarda los cambios ('Save').",
+    en: "Save changes.",
+  },
+  step4Title: {
+    es: "Añadir las Variables de Entorno en Vercel",
+    en: "Add Environment Variables in Vercel",
+  },
+  step4Desc: {
+    es: "En tu panel de base de datos, ve a Project Settings -> API. Copia la 'Project URL' y la 'anon public key'. Luego en Vercel -> Settings -> Environment Variables, añade:",
+    en: "In your database dashboard, go to Project Settings -> API. Copy the 'Project URL' and the 'anon public key'. Then in Vercel -> Settings -> Environment Variables, add:",
+  },
+
   // --- SETTINGS MODAL ---
   settingsTitle: {
     es: "Ajustes de la Aplicación",

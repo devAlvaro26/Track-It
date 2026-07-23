@@ -7,7 +7,7 @@
 
 ## Overview
 
-**Track‑It** is a modern web application designed to help you organize, catalog, and track your personal video game collection. Built with React, Vite, Express, TailwindCSS, and integrated with the Gemini AI SDK, it provides an intuitive digital shelf for managing games across multiple platforms, tracking playtime, recording completion status, and exploring collection statistics.
+**Track‑It** is a modern web application designed to help you organize, catalog, and track your personal video game collection. Built with React, Vite, Express, TailwindCSS, and integrated with the IGDB API, it provides an intuitive digital shelf for managing games across multiple platforms, tracking playtime, recording completion status, and exploring collection statistics.
 
 ---
 
@@ -16,10 +16,9 @@
 - ✨ **Modern UI** – Dark and Light mode support, smooth animations, and responsive layout built with TailwindCSS and Motion.
 - 🎮 **Game Management** – Add, edit, and delete games in your library with details like platform, genre, rating, and barcode.
 - ⏱️ **Playtime & Status Tracking** – Categorize games by status (*Pending*, *Playing*, *Completed*, *Favorites*) and track hours spent playing.
-- 🤖 **Gemini AI Integration** – Auto-complete or enrich game metadata using the official `@google/genai` SDK.
 - 📊 **Library Statistics** – View key collection metrics, distribution, and insights via an interactive stats panel.
 - 🔍 **Search & Filters** – Quick search by title, genre, or barcode, with filtering by status or console platform.
-- 💾 **Local Storage Persistence** – Retains your library locally in the browser with seamless fallback state.
+- 💾 **Cloud Persistence** – Retains your collection secure and everywhere.
 
 ---
 
