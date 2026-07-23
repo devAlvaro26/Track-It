@@ -160,9 +160,6 @@ export default function App() {
                   {settings.username}
                 </span>
               </div>
-              <p className="text-xs text-neutral-500 dark:text-gray-400 font-medium">
-                {t.appSubtitle}
-              </p>
             </div>
           </div>
 

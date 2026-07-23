@@ -11,10 +11,6 @@ export const translationTable = {
     es: "Mi biblioteca",
     en: "My Library",
   },
-  appSubtitle: {
-    es: "Tu estantería digital de videojuegos · IGDB",
-    en: "Your digital game shelf · IGDB",
-  },
   welcomeUser: {
     es: "Colección de",
     en: "Collection of",
@@ -575,6 +571,10 @@ export const translationTable = {
     es: "Código de Barras Oficial",
     en: "Official Barcode",
   },
+  noBarcodeText: {
+    es: "Sin código de barras",
+    en: "No barcode",
+  },
   acquiredLabel: {
     es: "Adquirido",
     en: "Acquired",
@@ -762,8 +762,8 @@ export const translationTable = {
     en: "Made with ❤️ for video game enthusiasts.",
   },
   footerTechNote: {
-    es: "Integrado con la API v4 oficial de IGDB. Admite códigos de barra y almacenamiento local.",
-    en: "Integrated with official IGDB v4 API. Supports barcodes and local persistence.",
+    es: "Integrado con la API oficial de IGDB.",
+    en: "Integrated with official IGDB API.",
   },
 } as const;
 
@@ -973,4 +973,3 @@ export const translations = {
     return getTranslation("en");
   },
 };
-

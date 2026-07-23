@@ -182,29 +182,31 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
         />
       )}
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto" id="detail-modal-container">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm overflow-hidden" id="detail-modal-container">
         
         {/* Container */}
         <motion.div
           layoutId={`game-card-${game.id}`}
-          className="relative w-full max-w-4xl bg-white dark:bg-[#121212] border dark:border-white/5 rounded-2xl shadow-2xl overflow-hidden my-8"
+          className={`relative w-full ${isEditing ? "max-w-3xl" : "max-w-4xl"} bg-white dark:bg-[#121212] rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col my-auto`}
           id="detail-modal"
         >
           
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-20 p-2 text-white/80 hover:text-white bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full transition-all cursor-pointer shadow-lg"
-            id="close-detail-modal"
-            title={t.close}
-          >
-            <Icons.X className="w-5 h-5" />
-          </button>
+          {/* Close Button - View mode only */}
+          {!isEditing && (
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 z-20 p-2 text-white/80 hover:text-white bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full transition-all cursor-pointer shadow-lg"
+              id="close-detail-modal"
+              title={t.close}
+            >
+              <Icons.X className="w-5 h-5" />
+            </button>
+          )}
 
           <AnimatePresence mode="wait">
             {!isEditing ? (
               /* ================= VIEW MODE ================= */
-              <div className="flex flex-col md:flex-row h-full">
+              <div className="flex flex-col md:flex-row h-full overflow-y-auto max-h-[90vh]">
                 
                 {/* Left Pane: Interactive Cover & Barcode Side */}
                 <div
@@ -224,11 +226,24 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                   {/* Gradient overlays */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30 pointer-events-none" />
 
-                  <div className="z-10 flex justify-between items-start">
-                    <span className="text-[10px] font-bold tracking-widest text-white/95 uppercase px-2.5 py-1 rounded-md bg-white/15 backdrop-blur-md shadow-sm">
-                      {game.platforms.join(" / ")}
-                    </span>
-                    <div className="flex gap-1">
+                  <div className="z-10 flex justify-between items-start gap-3 mb-2">
+                    <div className="flex flex-wrap gap-1 flex-1 min-w-0 pr-1 items-center">
+                      {game.platforms && game.platforms.length > 0 ? (
+                        game.platforms.map((plat) => (
+                          <span
+                            key={plat}
+                            className="text-[10px] font-bold tracking-wider text-white/95 uppercase px-2 py-0.5 rounded-md bg-white/15 backdrop-blur-md shadow-sm border border-white/10 whitespace-nowrap"
+                          >
+                            {plat}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-[10px] font-bold tracking-wider text-white/95 uppercase px-2 py-0.5 rounded-md bg-white/15 backdrop-blur-md shadow-sm border border-white/10">
+                          PC
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-1.5 shrink-0 ml-auto">
                       <button
                         onClick={() => setIsEditing(true)}
                         className="p-1.5 rounded-lg bg-white/10 hover:bg-white/25 border border-white/10 transition-all cursor-pointer"
@@ -300,12 +315,23 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
 
                   {/* Simulated Spine Barcode */}
                   <div className="z-10 mt-auto pt-4 border-t border-white/15 space-y-3">
-                    <div>
-                      <p className="text-[10px] uppercase font-bold tracking-widest text-white/50 text-center mb-1">
-                        {t.officialBarcodeTitle}
-                      </p>
-                      {renderBarcodeSVG(game.barcode)}
-                    </div>
+                    {game.barcode && game.barcode.trim() !== "" ? (
+                      <div>
+                        <p className="text-[10px] uppercase font-bold tracking-widest text-white/50 text-center mb-1">
+                          {t.officialBarcodeTitle}
+                        </p>
+                        {renderBarcodeSVG(game.barcode)}
+                      </div>
+                    ) : (
+                      <div className="text-center py-2">
+                        <p className="text-[10px] uppercase font-bold tracking-widest text-white/40 mb-1">
+                          {t.officialBarcodeTitle}
+                        </p>
+                        <p className="text-xs text-white/50 italic font-mono">
+                          {t.noBarcodeText}
+                        </p>
+                      </div>
+                    )}
                     <div className="flex justify-around items-center text-xs text-white/80">
                       <div className="text-center">
                         <p className="text-[9px] font-bold text-white/40 uppercase">{t.acquiredLabel}</p>
@@ -469,304 +495,326 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({ game, onClose,
                     )}
                   </div>
 
-                  {/* Personal Notes */}
-                  <div>
-                    <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-400 dark:text-gray-500 mb-2 flex items-center gap-1">
-                      <Icons.BookOpen className="w-3.5 h-3.5" />
-                      {t.notesAndLogTitle}
-                    </h3>
-                    <textarea
-                      rows={3}
-                      placeholder={t.notesTextareaPlaceholder}
-                      value={editNotes}
-                      onChange={(e) => {
-                        setEditNotes(e.target.value);
-                        handleSaveQuickEdits("notes", e.target.value);
-                      }}
-                      className="w-full p-4 border border-neutral-100 dark:border-white/5 rounded-xl bg-white dark:bg-[#121212] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all resize-none"
-                      id="textarea-notes"
-                    />
-                  </div>
-
                 </div>
-
               </div>
             ) : (
               /* ================= EDIT MODE ================= */
-              <form onSubmit={handleSaveFullEdit} className="p-6 space-y-6">
-                
-                {editImportNotice && (
-                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-2 shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <Icons.CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                      <span className="font-semibold">{editImportNotice}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setEditImportNotice("")}
-                      className="text-emerald-600 dark:text-emerald-400 hover:opacity-75 transition-opacity cursor-pointer"
-                    >
-                      <Icons.X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center pb-4 border-b border-neutral-100 dark:border-white/5">
-                  <h2 className="text-lg font-bold text-neutral-800 dark:text-white flex items-center gap-2">
+              <div className="flex flex-col flex-1 overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-white/5 flex-shrink-0">
+                  <h2 className="text-xl font-bold text-neutral-800 dark:text-white flex items-center gap-2">
                     <Icons.Edit3 className="w-5 h-5 text-indigo-500" />
-                    {t.editGameDetailsTitle}: {game.title}
+                    <span>{t.editGameDetailsTitle}</span>
                   </h2>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowIgdbModal(true)}
-                      className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-700 hover:bg-indigo-600 rounded-lg flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
-                    >
-                      <Icons.Search className="w-3.5 h-3.5" />
-                      {t.igdbSearchBtn}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(false)}
-                      className="p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors cursor-pointer"
-                    >
-                      <Icons.X className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
-                  {/* Column 1: Core metadata */}
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-gray-400 mb-1">
-                        {t.gameTitleLabel}
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                        className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-gray-400 mb-1">
-                        {t.igdbCoverUrlLabel}
-                      </label>
-                      <input
-                        type="url"
-                        placeholder={t.igdbCoverUrlPlaceholder}
-                        value={editCoverImage}
-                        onChange={(e) => setEditCoverImage(e.target.value)}
-                        className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-gray-400 mb-1">
-                          {t.genreLabel}
-                        </label>
-                        <input
-                          type="text"
-                          value={editGenre}
-                          onChange={(e) => setEditGenre(e.target.value)}
-                          className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-gray-400 mb-1">
-                          {t.releaseLabel}
-                        </label>
-                        <input
-                          type="text"
-                          value={editReleaseDate}
-                          onChange={(e) => setEditReleaseDate(e.target.value)}
-                          className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-gray-400 mb-1">
-                        {t.barcodeLabel}
-                      </label>
-                      <input
-                        type="text"
-                        value={editBarcode}
-                        onChange={(e) => setEditBarcode(e.target.value.replace(/[^0-9]/g, ""))}
-                        maxLength={13}
-                        className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-mono"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-gray-400 mb-1">
-                        {t.descriptionLabel}
-                      </label>
-                      <textarea
-                        rows={4}
-                        value={editDescription}
-                        onChange={(e) => setEditDescription(e.target.value)}
-                        className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all resize-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-[#CCCCCC] mb-2">
-                        {t.platformsLabel}
-                      </label>
-                      <ConsolePicker
-                        selectedPlatforms={editPlatforms}
-                        onChange={setEditPlatforms}
-                        language={language}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Column 2: Personal records & aesthetics */}
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-[#CCCCCC] mb-1">
-                          {t.statusLabel}
-                        </label>
-                        <select
-                          value={editStatus}
-                          onChange={(e) => setEditStatus(e.target.value as GameStatus)}
-                          className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all cursor-pointer"
-                        >
-                          <option value="Pendiente">{t.statusPendingTag}</option>
-                          <option value="Jugando">{t.statusPlayingTag}</option>
-                          <option value="Completado">{t.statusCompletedTag}</option>
-                          <option value="Favoritos">{t.statusFavoriteTag}</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-[#CCCCCC] mb-1">
-                          {t.acquisitionDateLabel}
-                        </label>
-                        <input
-                          type="date"
-                          value={editAcquisitionDate}
-                          onChange={(e) => setEditAcquisitionDate(e.target.value)}
-                          className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all cursor-pointer"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-[#CCCCCC] mb-1">
-                          {t.playHoursLabel}
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={editPlayTime}
-                          onChange={(e) => setEditPlayTime(Math.max(0, Number(e.target.value)))}
-                          className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-[#CCCCCC] mb-1">
-                          {t.rating}
-                        </label>
-                        <div className="flex gap-1.5 h-[38px] items-center">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              type="button"
-                              onClick={() => setEditRating(star)}
-                              className="text-amber-400 hover:scale-110 transition-transform cursor-pointer"
-                            >
-                              <Icons.Star
-                                className={`w-6 h-6 ${star <= editRating ? "fill-amber-400" : "text-neutral-300 dark:text-gray-700"}`}
-                              />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Aesthetic Panel */}
-                    <div className="p-4 rounded-xl border border-neutral-200 dark:border-white/5 bg-neutral-50 dark:bg-[#1A1A1A]/40 space-y-3">
-                      <h4 className="text-xs font-bold uppercase text-neutral-700 dark:text-[#CCCCCC]">
-                        {t.modifyCoverTitle}
-                      </h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[10px] uppercase font-bold text-neutral-400 mb-1">
-                            {t.bgColorLabel}
-                          </label>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="color"
-                              value={editCoverColor}
-                              onChange={(e) => setEditCoverColor(e.target.value)}
-                              className="w-8 h-8 rounded-lg cursor-pointer border border-neutral-200 dark:border-gray-700 p-0 overflow-hidden"
-                            />
-                            <span className="text-xs font-mono">{editCoverColor}</span>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] uppercase font-bold text-neutral-400 mb-1">
-                            {t.centralSymbolLabel}
-                          </label>
-                          <select
-                            value={editCoverSymbol}
-                            onChange={(e) => setEditCoverSymbol(e.target.value)}
-                            className="w-full px-2 py-1.5 border border-neutral-200 dark:border-white/5 rounded-lg bg-white dark:bg-[#121212] text-neutral-800 dark:text-white text-xs focus:outline-none cursor-pointer"
-                          >
-                            {AVAILABLE_SYMBOLS.map((sym) => (
-                              <option key={sym.id} value={sym.icon}>
-                                {translateSymbolLabel(sym.id, language)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-[#CCCCCC] mb-1">
-                        {t.collectorNotesLabel}
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={editNotes}
-                        onChange={(e) => setEditNotes(e.target.value)}
-                        className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all resize-none"
-                      />
-                    </div>
-
-                  </div>
-
-                </div>
-
-                {/* Edit actions */}
-                <div className="border-t border-neutral-100 dark:border-white/5 pt-4 flex justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setIsEditing(false)}
-                    className="px-4 py-2 text-xs font-bold text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-white/5 rounded-lg hover:bg-neutral-100 transition-all cursor-pointer"
+                    className="p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-full transition-colors cursor-pointer"
                   >
-                    {t.cancel}
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-md transition-all cursor-pointer"
-                  >
-                    {t.saveSettings}
+                    <Icons.X className="w-5 h-5" />
                   </button>
                 </div>
 
-              </form>
+                {/* Content Form */}
+                <form onSubmit={handleSaveFullEdit} className="p-6 overflow-y-auto flex-1 space-y-6">
+                  {editImportNotice && (
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-2 shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <Icons.CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                        <span className="font-semibold">{editImportNotice}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditImportNotice("")}
+                        className="text-emerald-600 dark:text-emerald-400 hover:opacity-75 transition-opacity cursor-pointer"
+                      >
+                        <Icons.X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    {/* Left Column: Basic Info */}
+                    <div className="space-y-4 flex flex-col">
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1 flex justify-between items-center">
+                          <span>{t.gameTitleLabel}</span>
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            required
+                            placeholder={t.gameTitlePlaceholder}
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            className="flex-1 px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowIgdbModal(true)}
+                            className="px-3.5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                            title={t.igdbSearchBtn}
+                          >
+                            <Icons.Search className="w-3.5 h-3.5" />
+                            <span>{t.igdbSearchBtn}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Cover Image URL Input */}
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1 flex justify-between items-center">
+                          <span>{t.igdbCoverUrlLabel}</span>
+                          {editCoverImage && (
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                              <Icons.CheckCircle2 className="w-3 h-3" />
+                              {t.igdbOfficialCover}
+                            </span>
+                          )}
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="url"
+                            placeholder={t.igdbCoverUrlPlaceholder}
+                            value={editCoverImage}
+                            onChange={(e) => setEditCoverImage(e.target.value)}
+                            className="flex-1 px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                          />
+                          {editCoverImage && (
+                            <button
+                              type="button"
+                              onClick={() => setEditCoverImage("")}
+                              className="px-2 text-neutral-400 hover:text-rose-500 transition-colors cursor-pointer"
+                              title={t.removeImage}
+                            >
+                              <Icons.XCircle className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
+                            {t.genreLabel}
+                          </label>
+                          <input
+                            type="text"
+                            placeholder={t.genrePlaceholder}
+                            value={editGenre}
+                            onChange={(e) => setEditGenre(e.target.value)}
+                            className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
+                            {t.releaseLabel}
+                          </label>
+                          <input
+                            type="text"
+                            placeholder={t.releasePlaceholder}
+                            value={editReleaseDate}
+                            onChange={(e) => setEditReleaseDate(e.target.value)}
+                            className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
+                          {t.barcodeLabel}
+                        </label>
+                        <input
+                          type="text"
+                          value={editBarcode}
+                          onChange={(e) => setEditBarcode(e.target.value.replace(/[^0-9]/g, ""))}
+                          maxLength={13}
+                          className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-mono"
+                        />
+                      </div>
+
+                      <div className="flex-1 flex flex-col">
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
+                          {t.descriptionLabel}
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={editDescription}
+                          onChange={(e) => setEditDescription(e.target.value)}
+                          className="w-full flex-1 min-h-[90px] px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all resize-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Right Column: Personal status & aesthetics */}
+                    <div className="space-y-4 flex flex-col">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
+                            {t.statusLabel}
+                          </label>
+                          <select
+                            value={editStatus}
+                            onChange={(e) => setEditStatus(e.target.value as GameStatus)}
+                            className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all cursor-pointer"
+                          >
+                            <option value="Pendiente">{t.statusPendingTag}</option>
+                            <option value="Jugando">{t.statusPlayingTag}</option>
+                            <option value="Completado">{t.statusCompletedTag}</option>
+                            <option value="Favoritos">{t.statusFavoriteTag}</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
+                            {t.acquisitionDateLabel}
+                          </label>
+                          <input
+                            type="date"
+                            value={editAcquisitionDate}
+                            onChange={(e) => setEditAcquisitionDate(e.target.value)}
+                            className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all cursor-pointer"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
+                            {t.playHoursLabel}
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder={t.hours}
+                            value={editPlayTime}
+                            onChange={(e) => setEditPlayTime(Math.max(0, Number(e.target.value)))}
+                            className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
+                            {t.rating}
+                          </label>
+                          <div className="flex gap-1.5 h-[38px] items-center">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setEditRating(star)}
+                                className="text-amber-400 hover:scale-110 transition-transform cursor-pointer"
+                              >
+                                <Icons.Star
+                                  className={`w-6 h-6 ${star <= editRating ? "fill-amber-400" : "text-neutral-300 dark:text-gray-700"}`}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Cover Preview & Customization */}
+                      <div className="p-4 rounded-xl border border-neutral-200 dark:border-white/5 bg-neutral-50 dark:bg-[#1A1A1A]/40 space-y-3 flex-1 flex flex-col justify-between">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-gray-300 flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <Icons.Palette className="w-3.5 h-3.5" />
+                            {t.coverDesignTitle}
+                          </span>
+                        </h4>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[10px] uppercase font-semibold text-neutral-400 mb-1">
+                              {t.bgColorLabel}
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="color"
+                                value={editCoverColor}
+                                onChange={(e) => setEditCoverColor(e.target.value)}
+                                className="w-8 h-8 rounded-lg cursor-pointer border border-neutral-200 dark:border-gray-700 p-0 overflow-hidden"
+                              />
+                              <span className="text-xs font-mono">{editCoverColor}</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] uppercase font-semibold text-neutral-400 mb-1">
+                              {t.centralSymbolLabel}
+                            </label>
+                            <select
+                              value={editCoverSymbol}
+                              onChange={(e) => setEditCoverSymbol(e.target.value)}
+                              className="w-full px-2 py-1.5 border border-neutral-200 dark:border-white/5 rounded-lg bg-white dark:bg-[#121212] text-neutral-800 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
+                            >
+                              {AVAILABLE_SYMBOLS.map((sym) => (
+                                <option key={sym.id} value={sym.icon}>
+                                  {translateSymbolLabel(sym.id, language)}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Cover Live Preview */}
+                        <div className="relative h-28 w-full rounded-lg overflow-hidden flex items-center justify-center p-3 shadow-inner mt-auto" style={{ backgroundColor: editCoverColor }}>
+                          {editCoverImage ? (
+                            <img
+                              src={editCoverImage}
+                              alt={t.previewCover}
+                              className="absolute inset-0 w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+                              <Icons.Gamepad2 className="w-8 h-8 text-white" />
+                            </div>
+                          )}
+                          <div className="absolute bottom-2 left-3 right-3 text-white drop-shadow">
+                            <p className="text-xs font-bold truncate">{editTitle || game.title}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  {/* Platforms selection - Full Width */}
+                  <div className="border-t border-neutral-100 dark:border-white/5 pt-5 space-y-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400">
+                      {t.platformsLabel}
+                    </label>
+                    <ConsolePicker
+                      selectedPlatforms={editPlatforms}
+                      onChange={setEditPlatforms}
+                      language={language}
+                    />
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="border-t border-neutral-100 dark:border-white/5 pt-6 flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-[#CCCCCC] border border-neutral-200 dark:border-white/5 rounded-lg hover:bg-neutral-50 dark:hover:bg-[#1A1A1A] transition-colors cursor-pointer"
+                    >
+                      {t.cancel}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!editTitle.trim()}
+                      className="px-5 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-neutral-200 dark:disabled:bg-neutral-800 disabled:text-neutral-400 dark:disabled:text-neutral-500 rounded-lg shadow-sm transition-all cursor-pointer"
+                    >
+                      {t.saveSettings}
+                    </button>
+                  </div>
+
+                </form>
+              </div>
             )}
           </AnimatePresence>
 

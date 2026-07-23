@@ -64,7 +64,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
       genre: genre.trim() || "Otros",
       platforms: platforms.length > 0 ? platforms : ["PC"],
       releaseDate: releaseDate || new Date().toISOString().split("T")[0],
-      barcode: barcode.trim() || Math.floor(Math.random() * 9000000000000 + 1000000000000).toString(),
+      barcode: barcode.trim(),
       acquisitionDate: acquisitionDate || new Date().toISOString().split("T")[0],
       rating,
       playTime: Number(playTime) || 0,
@@ -112,18 +112,18 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
         />
       )}
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto" id="add-game-modal-container">
-        <div className="relative w-full max-w-3xl bg-white dark:bg-[#121212] rounded-2xl shadow-xl overflow-hidden my-8" id="add-game-modal">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-sm overflow-hidden" id="add-game-modal-container">
+        <div className="relative w-full max-w-3xl bg-white dark:bg-[#121212] rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col my-auto" id="add-game-modal">
           
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-white/5">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-white/5 flex-shrink-0">
             <h2 className="text-xl font-bold text-neutral-800 dark:text-white flex items-center gap-2">
               <Icons.PlusSquare className="w-5 h-5 text-indigo-500" />
               {t.addGameTitle}
             </h2>
             <button
               onClick={onClose}
-              className="p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-full transition-colors"
+              className="p-1.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-full transition-colors cursor-pointer"
               id="close-add-modal"
             >
               <Icons.X className="w-5 h-5" />
@@ -131,7 +131,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
           </div>
 
           {/* Content Form */}
-          <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(100vh-180px)] space-y-6">
+          <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1 space-y-6">
             
             {importNotice && (
               <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-2 shadow-sm">
@@ -261,7 +261,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
                   </div>
                 </div>
 
-                <div>
+                <div className="flex-1 flex flex-col">
                   <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
                     {t.descriptionLabel}
                   </label>
@@ -270,25 +270,14 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
                     placeholder={t.descriptionPlaceholder}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all resize-none"
+                    className="w-full flex-1 min-h-[90px] px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all resize-none"
                     id="input-description"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-2">
-                    {t.platformsLabel}
-                  </label>
-                  <ConsolePicker
-                    selectedPlatforms={platforms}
-                    onChange={setPlatforms}
-                    language={language}
                   />
                 </div>
               </div>
 
               {/* Right Column: Collection Details & Cover Customization */}
-              <div className="space-y-4">
+              <div className="space-y-4 flex flex-col">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
@@ -359,7 +348,7 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
                 </div>
 
                 {/* Cover Preview & Customization */}
-                <div className="p-4 rounded-xl border border-neutral-200 dark:border-white/5 bg-neutral-50 dark:bg-[#1A1A1A]/40 space-y-3">
+                <div className="p-4 rounded-xl border border-neutral-200 dark:border-white/5 bg-neutral-50 dark:bg-[#1A1A1A]/40 space-y-3 flex-1 flex flex-col justify-between">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-gray-300 flex items-center justify-between">
                     <span className="flex items-center gap-1">
                       <Icons.Palette className="w-3.5 h-3.5" />
@@ -372,25 +361,6 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
                     )}
                   </h4>
 
-                  {/* Cover Live Preview */}
-                  <div className="relative h-28 w-full rounded-lg overflow-hidden flex items-center justify-center p-3 shadow-inner" style={{ backgroundColor: coverColor }}>
-                    {coverImage ? (
-                      <img
-                        src={coverImage}
-                        alt={t.previewCover}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <div className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
-                        <Icons.Gamepad2 className="w-8 h-8 text-white" />
-                      </div>
-                    )}
-                    <div className="absolute bottom-2 left-3 right-3 text-white drop-shadow">
-                      <p className="text-xs font-bold truncate">{title || t.gameTitleDefault}</p>
-                    </div>
-                  </div>
-                  
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] uppercase font-semibold text-neutral-400 mb-1">
@@ -424,24 +394,41 @@ export const AddGameForm: React.FC<AddGameFormProps> = ({ onClose, onAdd, langua
                       </select>
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400 mb-1">
-                    {t.collectorNotesLabel}
-                  </label>
-                  <textarea
-                    rows={2}
-                    placeholder={t.collectorNotesPlaceholder}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    className="w-full px-3 py-2 border border-neutral-200 dark:border-white/5 rounded-lg bg-neutral-50 dark:bg-[#1A1A1A] text-neutral-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all resize-none"
-                    id="input-notes"
-                  />
+                  {/* Cover Live Preview */}
+                  <div className="relative h-28 w-full rounded-lg overflow-hidden flex items-center justify-center p-3 shadow-inner mt-auto" style={{ backgroundColor: coverColor }}>
+                    {coverImage ? (
+                      <img
+                        src={coverImage}
+                        alt={t.previewCover}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
+                        <Icons.Gamepad2 className="w-8 h-8 text-white" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-2 left-3 right-3 text-white drop-shadow">
+                      <p className="text-xs font-bold truncate">{title || t.gameTitleDefault}</p>
+                    </div>
+                  </div>
                 </div>
 
               </div>
 
+            </div>
+
+            {/* Platform Selection - Full Width */}
+            <div className="border-t border-neutral-100 dark:border-white/5 pt-5 space-y-2">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-gray-400">
+                {t.platformsLabel}
+              </label>
+              <ConsolePicker
+                selectedPlatforms={platforms}
+                onChange={setPlatforms}
+                language={language}
+              />
             </div>
 
             {/* Achievements Manager (Logros) */}

@@ -76,9 +76,13 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
       }
 
       if (data.games && data.games.length > 0) {
-        setSearchNotice(`✓ ${t.igdbSearchSuccessNotice.replace("{count}", String(data.games.length))}`);
+        setSearchNotice(
+          t.igdbSearchSuccessNotice.replace("{count}", String(data.games.length))
+        );
       } else {
-        setSearchNotice(`ℹ️ ${t.igdbSearchZeroNotice.replace("{query}", q)}`);
+        setSearchNotice(
+          t.igdbSearchZeroNotice.replace("{query}", q)
+        );
       }
     } catch (err: any) {
       console.error("Error searching IGDB:", err);
@@ -126,9 +130,6 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
             <div>
               <h2 className="text-lg font-extrabold text-neutral-900 dark:text-white flex items-center gap-2">
                 {t.igdbModalTitle}
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 uppercase tracking-widest border border-indigo-200 dark:border-indigo-800/50">
-                  v4 API
-                </span>
               </h2>
               <p className="text-xs text-neutral-500 dark:text-gray-400">
                 {t.igdbModalSubtitle}
@@ -162,7 +163,7 @@ export const IgdbSearchModal: React.FC<IgdbSearchModalProps> = ({
                 className="text-[11px] text-neutral-500 dark:text-gray-400 truncate max-w-[420px]"
                 title={t.igdbConfigureHint}
               >
-                ℹ️ {t.igdbConfigureHint}
+                {t.igdbConfigureHint}
               </span>
             )}
           </div>
